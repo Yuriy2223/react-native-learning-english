@@ -12,23 +12,23 @@ import {
   View,
 } from "react-native";
 
+import { SigninFormData } from "@/types";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { SIZES } from "../../constants";
 import { useTheme } from "../../hooks/useTheme";
 import { useToast } from "../../hooks/useToast";
-import { useAppDispatch } from "../../redux/store";
-import { apiService } from "../../services/api";
-import { LoginFormData } from "../../types";
-import { authUtils } from "../../utils";
-import { loginSchema } from "../../validation";
 import { loginUser } from "../../redux/auth/operations";
 import { setUser } from "../../redux/auth/slice";
+import { useAppDispatch } from "../../redux/store";
+import { apiService } from "../../services/api";
+import { authUtils } from "../../utils";
+import { loginSchema } from "../../validation";
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { showSuccess, showError, showInfo } = useToast();
+  const { showSuccess, showError, showInfo, showWarning } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -36,8 +36,8 @@ export default function LoginScreen() {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<LoginFormData>({
-    resolver: yupResolver(loginSchema) as Resolver<LoginFormData>,
+  } = useForm<SigninFormData>({
+    resolver: yupResolver(loginSchema) as Resolver<SigninFormData>,
     mode: "onChange",
     defaultValues: {
       email: "",
@@ -45,20 +45,52 @@ export default function LoginScreen() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: SigninFormData) => {
     setIsLoading(true);
     try {
-      await dispatch(loginUser(data)).unwrap();
+      const user = await dispatch(loginUser(data)).unwrap();
+
+      if (user.emailVerified === false) {
+        showWarning({
+          title: "Email не підтверджено",
+          message: "Будь ласка, підтвердіть вашу електронну пошту перед входом",
+          duration: 5000,
+        });
+
+        router.replace({
+          pathname: "/(auth)/verify-email",
+          params: { email: user.email },
+        });
+
+        return;
+      }
 
       showSuccess({
         message: "Успішний вхід в систему!",
       });
 
       router.replace("/home");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+
+      if (error?.emailVerified === false) {
+        showWarning({
+          title: "Email не підтверджено",
+          message:
+            error.message || "Будь ласка, підтвердіть вашу електронну пошту",
+          duration: 5000,
+        });
+
+        router.replace({
+          pathname: "/(auth)/verify-email",
+          params: { email: error.email || data.email },
+        });
+
+        return;
+      }
+
       showError({
-        message: "Помилка входу. Перевірте дані.",
+        message: error.message || "Помилка входу. Перевірте дані.",
       });
     } finally {
       setIsLoading(false);
@@ -71,7 +103,6 @@ export default function LoginScreen() {
       const result = await socialAuthService.signInWithGoogle();
 
       if (result.type === "success" && result.user && result.token) {
-        // Зберігаємо токен
         await authUtils.saveAuthToken(result.token);
         apiService.setAuthToken(result.token);
         await authUtils.saveUserData(result.user);
@@ -79,6 +110,7 @@ export default function LoginScreen() {
         const fullUser = {
           totalStudyHours: 0,
           createdAt: new Date().toISOString(),
+          emailVerified: true,
           ...result.user,
         };
 
@@ -106,54 +138,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleLogin = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
-
-      if (!socialAuthService.isAppleAvailable()) {
-        showError({
-          message: "Apple Sign In доступний тільки на iOS",
-        });
-        return;
-      }
-
-      const result = await socialAuthService.signInWithApple();
-
-      if (result.type === "success" && result.user && result.token) {
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
-
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
-
-        dispatch(setUser(fullUser));
-
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}! Ви увійшли через Apple ID`,
-        });
-
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Авторизацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка входу через Apple ID",
-        });
-      }
-    } catch (error) {
-      console.error("Apple login error:", error);
-      showError({
-        message: "Помилка входу через Apple ID",
-      });
-    }
-  };
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -169,9 +153,6 @@ export default function LoginScreen() {
         </View>
         <Text style={[styles.appTitle, { color: colors.text }]}>
           English Learning
-        </Text>
-        <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>
-          Вивчайте англійську легко та весело
         </Text>
       </View>
 
@@ -272,13 +253,6 @@ export default function LoginScreen() {
             variant="outline"
             style={styles.socialButton}
           />
-
-          <Button
-            title="Увійти через Apple"
-            onPress={handleAppleLogin}
-            variant="outline"
-            style={styles.socialButton}
-          />
         </View>
 
         {/* Register Link */}
@@ -325,10 +299,6 @@ const styles = StyleSheet.create({
     fontSize: SIZES.fontSize.xxl,
     fontWeight: "bold",
     marginBottom: SIZES.spacing.xs,
-  },
-  appSubtitle: {
-    fontSize: SIZES.fontSize.md,
-    textAlign: "center",
   },
   formContainer: {
     width: "100%",

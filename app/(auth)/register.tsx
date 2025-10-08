@@ -17,13 +17,13 @@ import { TextInput } from "../../components/TextInput";
 import { SIZES } from "../../constants";
 import { useTheme } from "../../hooks/useTheme";
 import { useToast } from "../../hooks/useToast";
+import { registerUser } from "../../redux/auth/operations";
+import { setUser } from "../../redux/auth/slice";
 import { useAppDispatch } from "../../redux/store";
 import { apiService } from "../../services/api";
 import { RegisterFormData } from "../../types";
 import { authUtils } from "../../utils";
 import { registerSchema } from "../../validation";
-import { registerUser } from "../../redux/auth/operations";
-import { setUser } from "../../redux/auth/slice";
 
 export default function RegisterScreen() {
   const dispatch = useAppDispatch();
@@ -48,25 +48,73 @@ export default function RegisterScreen() {
     },
   });
 
+  // const onSubmit = async (data: RegisterFormData) => {
+  //   setIsLoading(true);
+  //   try {
+  //     await dispatch(registerUser(data)).unwrap();
+
+  //     showSuccess({
+  //       message: "Акаунт успішно створено!",
+  //     });
+
+  //     router.replace("/home");
+  //   } catch (error) {
+  //     console.error("Помилка реєстрації:", error);
+  //     showError({
+  //       message: "Помилка реєстрації. Спробуйте ще раз.",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await dispatch(registerUser(data)).unwrap();
+      const result = await dispatch(registerUser(data)).unwrap();
 
-      showSuccess({
-        message: "Акаунт успішно створено!",
+      // Показуємо інформаційне повідомлення
+      showInfo({
+        message:
+          result.message || "Перевірте вашу пошту для підтвердження акаунту",
       });
 
-      router.replace("/home");
-    } catch (error) {
+      // Зберігаємо email для наступного екрану
+      // Переходимо на екран з інструкціями
+      router.replace({
+        pathname: "/(auth)/verify-email",
+        params: { email: data.email },
+      });
+    } catch (error: any) {
       console.error("Помилка реєстрації:", error);
       showError({
-        message: "Помилка реєстрації. Спробуйте ще раз.",
+        message: error || "Помилка реєстрації. Спробуйте ще раз.",
       });
     } finally {
       setIsLoading(false);
     }
   };
+  // const onSubmit = async (data: RegisterFormData) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await dispatch(registerUser(data)).unwrap();
+
+  //     // Показуємо повідомлення про верифікацію
+  //     showInfo({
+  //       message:
+  //         result.message || "Перевірте вашу пошту для підтвердження акаунту",
+  //     });
+
+  //     // Переходимо на екран логіну, а не home
+  //     router.replace("/(auth)/login");
+  //   } catch (error: any) {
+  //     console.error("Помилка реєстрації:", error);
+  //     showError({
+  //       message: error || "Помилка реєстрації. Спробуйте ще раз.",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleGoogleRegister = async () => {
     try {
@@ -108,53 +156,53 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleAppleRegister = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
+  // const handleAppleRegister = async () => {
+  //   try {
+  //     const { socialAuthService } = await import("../../services/socialAuth");
 
-      if (!socialAuthService.isAppleAvailable()) {
-        showError({
-          message: "Apple Sign In доступний тільки на iOS",
-        });
-        return;
-      }
+  //     if (!socialAuthService.isAppleAvailable()) {
+  //       showError({
+  //         message: "Apple Sign In доступний тільки на iOS",
+  //       });
+  //       return;
+  //     }
 
-      const result = await socialAuthService.signInWithApple();
+  //     const result = await socialAuthService.signInWithApple();
 
-      if (result.type === "success" && result.user && result.token) {
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
+  //     if (result.type === "success" && result.user && result.token) {
+  //       await authUtils.saveAuthToken(result.token);
+  //       apiService.setAuthToken(result.token);
+  //       await authUtils.saveUserData(result.user);
 
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
+  //       const fullUser = {
+  //         totalStudyHours: 0,
+  //         createdAt: new Date().toISOString(),
+  //         ...result.user,
+  //       };
 
-        dispatch(setUser(fullUser));
+  //       dispatch(setUser(fullUser));
 
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}! Акаунт створено через Apple ID`,
-        });
+  //       showSuccess({
+  //         message: `Вітаємо, ${result.user.name}! Акаунт створено через Apple ID`,
+  //       });
 
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Реєстрацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка реєстрації через Apple ID",
-        });
-      }
-    } catch (error) {
-      console.error("Помилка реєстрації через Apple ID:", error);
-      showError({
-        message: "Помилка реєстрації через Apple ID",
-      });
-    }
-  };
+  //       router.replace("/home");
+  //     } else if (result.type === "cancel") {
+  //       showInfo({
+  //         message: "Реєстрацію скасовано",
+  //       });
+  //     } else {
+  //       showError({
+  //         message: result.error || "Помилка реєстрації через Apple ID",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Помилка реєстрації через Apple ID:", error);
+  //     showError({
+  //       message: "Помилка реєстрації через Apple ID",
+  //     });
+  //   }
+  // };
 
   return (
     <ScrollView
@@ -333,12 +381,12 @@ export default function RegisterScreen() {
             style={styles.socialButton}
           />
 
-          <Button
+          {/* <Button
             title="Реєстрація через Apple"
             onPress={handleAppleRegister}
             variant="outline"
             style={styles.socialButton}
-          />
+          /> */}
         </View>
 
         {/* Login Link */}

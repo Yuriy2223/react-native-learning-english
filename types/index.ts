@@ -5,6 +5,40 @@ export interface User {
   avatar?: string | null;
   totalStudyHours: number;
   createdAt: string;
+  emailVerified?: boolean;
+}
+
+export interface SignupFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+export interface SignupResponse {
+  message: string;
+}
+
+export interface SigninFormData {
+  email: string;
+  password: string;
+}
+export interface SigninResponse {
+  user: User;
+  accessToken: string;
+  refreshToken?: string;
+}
+export interface GoogleAuthResponse {
+  user: User;
+  accessToken: string;
+  refreshToken?: string;
+}
+
+export interface ProfileFormData {
+  name: string;
+  email: string;
+}
+export interface ForgotPasswordFormData {
+  email: string;
 }
 
 export interface Word {
@@ -71,27 +105,6 @@ export interface AppSettings {
   soundEnabled: boolean;
   notificationsEnabled: boolean;
   offlineMode: boolean;
-}
-
-export interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-export interface RegisterFormData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface ProfileFormData {
-  name: string;
-  email: string;
-}
-
-export interface ForgotPasswordFormData {
-  email: string;
 }
 
 export interface Achievement {

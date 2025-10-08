@@ -81,7 +81,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="phrases"
         options={{
           title: "Фрази",
@@ -94,9 +94,9 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="grammar"
         options={{
           title: "Граматика",
@@ -109,7 +109,7 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }

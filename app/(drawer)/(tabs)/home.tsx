@@ -1,38 +1,19 @@
 // app/(tabs)/home.tsx
+import { selectUser } from "@/redux/auth/selectors";
+import { useAppSelector } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-
 import { Button } from "../../../components/Button";
 import { SIZES } from "../../../constants";
 import { useTheme } from "../../../hooks/useTheme";
-import { User } from "../../../types";
 import { formatStudyTime } from "../../../utils";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    // Симуляція завантаження даних користувача
-    const mockUser: User = {
-      id: "1",
-      email: "user@example.com",
-      name: "Олександр Петренко",
-      avatar: null,
-      totalStudyHours: 145,
-      createdAt: new Date().toISOString(),
-    };
-    setUser(mockUser);
-  };
+  const user = useAppSelector(selectUser);
 
   const handleGetStarted = () => {
-    // Перехід до першого модуля або екрану вибору
     router.push("/explore");
   };
 

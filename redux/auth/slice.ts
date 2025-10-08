@@ -13,6 +13,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   isError: string | null;
+  registrationMessage: string | null;
 }
 
 const initialState: AuthState = {
@@ -20,6 +21,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   isError: null,
+  registrationMessage: null,
 };
 
 const authSlice = createSlice({
@@ -64,11 +66,11 @@ const authSlice = createSlice({
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
         state.isError = null;
+        state.registrationMessage = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload;
+        state.registrationMessage = action.payload.message;
         state.isError = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -84,15 +86,22 @@ const authSlice = createSlice({
       })
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload;
-        state.isError = null;
+
+        if (action.payload) {
+          state.isAuthenticated = true;
+          state.user = action.payload;
+          state.isError = null;
+        } else {
+          state.isAuthenticated = false;
+          state.user = null;
+          state.isError = null;
+        }
       })
       .addCase(checkAuthStatus.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.isError = action.payload as string;
+        state.isError = null;
       });
 
     builder

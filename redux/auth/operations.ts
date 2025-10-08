@@ -1,36 +1,57 @@
+// redux/auth/operations.ts
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { apiService } from "../../services/api";
 import {
   ForgotPasswordFormData,
-  LoginFormData,
-  RegisterFormData,
+  SigninFormData,
+  SignupFormData,
 } from "../../types";
 import { authUtils } from "../../utils";
 
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async (data: LoginFormData, { rejectWithValue }) => {
+  async (data: SigninFormData, { rejectWithValue }) => {
     try {
       const response = await apiService.login(data);
-      await authUtils.saveAuthToken(response.token);
+
+      await authUtils.saveAuthToken(response.accessToken);
       await authUtils.saveUserData(response.user);
+
+      apiService.setAuthToken(response.accessToken);
+
       return response.user;
     } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
+      console.error("Login error:", error);
+
+      if (error.message?.includes("Email не підтверджено")) {
+        return rejectWithValue({
+          message: error.message,
+          emailVerified: false,
+          email: error.email,
+        });
+      }
+
+      return rejectWithValue(error.message || "Помилка входу");
     }
   }
 );
 
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
-  async (data: RegisterFormData, { rejectWithValue }) => {
+  async (data: SignupFormData, { rejectWithValue }) => {
     try {
       const response = await apiService.register(data);
-      await authUtils.saveAuthToken(response.token);
-      await authUtils.saveUserData(response.user);
-      return response.user;
+
+      console.log("✅ API Success: /api/auth/signup");
+      console.log("📦 Response:", response);
+
+      return {
+        message: response.message,
+        requiresVerification: true,
+      };
     } catch (error: any) {
-      return rejectWithValue(error.message || "Registration failed");
+      console.error("Registration error:", error);
+      return rejectWithValue(error.message || "Помилка реєстрації");
     }
   }
 );
@@ -40,16 +61,26 @@ export const checkAuthStatus = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = await authUtils.getAuthToken();
+
       if (!token) {
-        throw new Error("No token found");
+        console.log("No token found - user not authenticated");
+        return null;
       }
-      const userData = await authUtils.getUserData();
-      if (!userData) {
-        throw new Error("No user data found");
-      }
+
+      apiService.setAuthToken(token);
+      const userData = await apiService.getUserProfile();
+
+      await authUtils.saveUserData(userData);
+
       return userData;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.log("Auth check error:", error.message);
+
+      await authUtils.removeAuthToken();
+      await authUtils.removeUserData();
+      apiService.clearAuthToken();
+
+      return null;
     }
   }
 );
@@ -59,9 +90,10 @@ export const forgotPassword = createAsyncThunk(
   async (data: ForgotPasswordFormData, { rejectWithValue }) => {
     try {
       await apiService.forgotPassword(data.email);
-      return { message: "Reset email sent successfully" };
+      return { message: "Лист відправлено успішно" };
     } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to send reset email");
+      console.error("Forgot password error:", error);
+      return rejectWithValue(error.message || "Помилка відправки листа");
     }
   }
 );
@@ -72,9 +104,31 @@ export const logoutUser = createAsyncThunk(
     try {
       await authUtils.removeAuthToken();
       await authUtils.removeUserData();
+
+      apiService.clearAuthToken();
+
       return null;
     } catch (error: any) {
-      return rejectWithValue(error.message || "Logout failed");
+      console.error("Logout error:", error);
+      return rejectWithValue(error.message || "Помилка виходу");
+    }
+  }
+);
+
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (idToken: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.googleAuth(idToken);
+
+      await authUtils.saveAuthToken(response.accessToken);
+      await authUtils.saveUserData(response.user);
+      apiService.setAuthToken(response.accessToken);
+
+      return response.user;
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      return rejectWithValue(error.message || "Помилка входу через Google");
     }
   }
 );

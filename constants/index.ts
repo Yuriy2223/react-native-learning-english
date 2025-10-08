@@ -104,19 +104,59 @@ export const STORAGE_KEYS = {
   OFFLINE_DATA: "@offline_data",
 };
 
-export const API_ENDPOINTS = {
-  BASE_URL: "https://api.example.com",
-  LOGIN: "/auth/login",
-  REGISTER: "/auth/register",
-  REFRESH: "/auth/refresh",
-  USER_PROFILE: "/user/profile",
-  TOPICS: "/topics",
-  WORDS: "/words",
-  PHRASES: "/phrases",
-  GRAMMAR: "/grammar",
-  EXERCISES: "/exercises",
-  PROGRESS: "/user/progress",
+// ВИПРАВЛЕННЯ: Правильна конфігурація API для різних платформ
+const getBaseUrl = () => {
+  // Спробуйте отримати з environment variable
+  const envUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+  if (envUrl) {
+    // Якщо є в .env, використовуємо його
+    // Але замінюємо localhost на правильну адресу для Android
+    if (Platform.OS === "android" && envUrl.includes("localhost")) {
+      return envUrl.replace("localhost", "10.0.2.2");
+    }
+    return envUrl;
+  }
+
+  // Fallback конфігурація, якщо .env не завантажується
+  if (__DEV__) {
+    // Development mode
+    if (Platform.OS === "android") {
+      // Для Android емулятора використовуємо 10.0.2.2
+      return "http://10.0.2.2:3000";
+    } else if (Platform.OS === "ios") {
+      // Для iOS симулятора можна використовувати localhost
+      return "http://localhost:3000";
+    } else {
+      // Для web
+      return "http://localhost:3000";
+    }
+  }
+
+  // Production mode - замініть на вашу продакшн адресу
+  return "https://your-production-api.com";
 };
+
+export const API_ENDPOINTS = {
+  BASE_URL: getBaseUrl(),
+  LOGIN: "api/auth/login",
+  REGISTER: "api/auth/register",
+  REFRESH: "api/auth/refresh",
+  USER_PROFILE: "api/user/profile",
+  TOPICS: "api/topics",
+  WORDS: "api/words",
+  PHRASES: "api/phrases",
+  GRAMMAR: "api/grammar",
+  EXERCISES: "api/exercises",
+  PROGRESS: "api/user/progress",
+};
+
+// Для дебагу - видаліть після налаштування
+console.log("🔧 API Configuration:", {
+  platform: Platform.OS,
+  baseUrl: API_ENDPOINTS.BASE_URL,
+  isDev: __DEV__,
+});
 
 export const NAVIGATION_ROUTES = {
   // Auth Stack
