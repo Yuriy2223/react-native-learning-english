@@ -1,4 +1,3 @@
-// app/exercises.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -10,17 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { Button } from "../components/Button";
 import { SIZES } from "../constants";
+import { showToast } from "../hooks/showToast";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
-
 import { useAppDispatch } from "../redux/store";
 import { addPoints } from "../redux/user/slice";
 import { Exercise } from "../types";
 
-// Mock exercises data
 const mockExercises: Exercise[] = [
   {
     id: "1",
@@ -66,9 +62,7 @@ const mockExercises: Exercise[] = [
 
 export default function ExercisesScreen() {
   const { colors } = useTheme();
-  const { showSuccess, showError } = useToast();
   const dispatch = useAppDispatch();
-
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -87,7 +81,7 @@ export default function ExercisesScreen() {
 
   const handleSubmitAnswer = () => {
     if (!selectedAnswer) {
-      showError({
+      showToast.error({
         message: "Оберіть відповідь",
       });
       return;
@@ -102,11 +96,11 @@ export default function ExercisesScreen() {
       setTotalScore(newScore);
       dispatch(addPoints(currentExercise.points));
 
-      showSuccess({
+      showToast.error({
         message: `Правильно! +${currentExercise.points} балів`,
       });
     } else {
-      showError({
+      showToast.error({
         message: `Неправильно. Правильна відповідь: ${currentExercise.correctAnswer}`,
       });
     }
@@ -115,7 +109,7 @@ export default function ExercisesScreen() {
   const handleNextExercise = () => {
     if (isLastExercise) {
       setCompletedExercises(completedExercises + 1);
-      showSuccess({
+      showToast.success({
         message: `Вправи завершено! Загальний бал: ${totalScore}`,
         duration: 4000,
       });
@@ -126,7 +120,6 @@ export default function ExercisesScreen() {
       return;
     }
 
-    // Анімація переходу
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -140,7 +133,6 @@ export default function ExercisesScreen() {
       }),
     ]).start();
 
-    // Перейти до наступної вправи
     setCurrentExerciseIndex(currentExerciseIndex + 1);
     setSelectedAnswer(null);
     setShowResult(false);
@@ -179,29 +171,22 @@ export default function ExercisesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Вправи</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          Вправи
+        </Text>
 
         <View style={styles.scoreContainer}>
           <Ionicons name="trophy" size={20} color={colors.warning} />
-          <Text style={[styles.scoreText, { color: colors.text }]}>
+          <Text style={[styles.scoreText, { color: colors.textPrimary }]}>
             {totalScore}
           </Text>
         </View>
       </View>
 
-      {/* Progress Bar */}
       <View style={styles.progressSection}>
         <View style={styles.progressInfo}>
-          <Text style={[styles.progressText, { color: colors.text }]}>
+          <Text style={[styles.progressText, { color: colors.textPrimary }]}>
             Вправа {currentExerciseIndex + 1} з {mockExercises.length}
           </Text>
           <Text style={[styles.progressPercent, { color: colors.primary }]}>
@@ -235,7 +220,6 @@ export default function ExercisesScreen() {
         <Animated.View
           style={[styles.exerciseContainer, { opacity: fadeAnim }]}
         >
-          {/* Exercise Type */}
           <View
             style={[styles.exerciseType, { backgroundColor: colors.surface }]}
           >
@@ -244,7 +228,9 @@ export default function ExercisesScreen() {
               size={20}
               color={colors.primary}
             />
-            <Text style={[styles.exerciseTypeText, { color: colors.text }]}>
+            <Text
+              style={[styles.exerciseTypeText, { color: colors.textPrimary }]}
+            >
               {getExerciseTypeLabel(currentExercise.type)}
             </Text>
             <View
@@ -259,19 +245,17 @@ export default function ExercisesScreen() {
             </View>
           </View>
 
-          {/* Question */}
           <View
             style={[
               styles.questionContainer,
               { backgroundColor: colors.surface },
             ]}
           >
-            <Text style={[styles.questionText, { color: colors.text }]}>
+            <Text style={[styles.questionText, { color: colors.textPrimary }]}>
               {currentExercise.question}
             </Text>
           </View>
 
-          {/* Options */}
           <View style={styles.optionsContainer}>
             {currentExercise.options?.map((option, index) => {
               const isSelected = selectedAnswer === option;
@@ -347,7 +331,7 @@ export default function ExercisesScreen() {
                     <Text
                       style={[
                         styles.optionText,
-                        { color: colors.text },
+                        { color: colors.textPrimary },
                         isSelected && !showResult && { color: colors.primary },
                         showCorrectAnswer && { color: colors.success },
                         showWrongAnswer && { color: colors.error },
@@ -361,7 +345,6 @@ export default function ExercisesScreen() {
             })}
           </View>
 
-          {/* Result Explanation */}
           {showResult && (
             <View
               style={[
@@ -400,7 +383,7 @@ export default function ExercisesScreen() {
                 </Text>
               )}
 
-              <Text style={[styles.resultScore, { color: colors.text }]}>
+              <Text style={[styles.resultScore, { color: colors.textPrimary }]}>
                 {isCorrect ? `+${currentExercise.points} балів` : "0 балів"}
               </Text>
             </View>
@@ -408,7 +391,6 @@ export default function ExercisesScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Bottom Actions */}
       <View style={styles.bottomContainer}>
         {!showResult ? (
           <Button
@@ -448,9 +430,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.spacing.lg,
     paddingTop: SIZES.spacing.lg,
     paddingBottom: SIZES.spacing.md,
-  },
-  backButton: {
-    padding: SIZES.spacing.sm,
   },
   headerTitle: {
     flex: 1,

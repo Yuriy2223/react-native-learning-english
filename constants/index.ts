@@ -6,7 +6,7 @@ export const COLORS = {
     secondary: "#5856D6",
     background: "#FFFFFF",
     surface: "#F2F2F7",
-    text: "#000000",
+    textPrimary: "#000000",
     textSecondary: "#6D6D80",
     border: "#C6C6C8",
     success: "#34C759",
@@ -18,7 +18,7 @@ export const COLORS = {
     secondary: "#5E5CE6",
     background: "#000000",
     surface: "#1C1C1E",
-    text: "#FFFFFF",
+    textPrimary: "#FFFFFF",
     textSecondary: "#8E8E93",
     border: "#38383A",
     success: "#30D158",
@@ -95,77 +95,4 @@ export const SIZES = {
     xl: 24,
     xxl: 32,
   },
-};
-
-export const STORAGE_KEYS = {
-  USER_TOKEN: "@auth_token",
-  USER_DATA: "@user_data",
-  APP_SETTINGS: "@app_settings",
-  OFFLINE_DATA: "@offline_data",
-};
-
-export const API_ENDPOINTS = {
-  BASE_URL: "https://api.example.com",
-  LOGIN: "/auth/login",
-  REGISTER: "/auth/register",
-  REFRESH: "/auth/refresh",
-  USER_PROFILE: "/user/profile",
-  TOPICS: "/topics",
-  WORDS: "/words",
-  PHRASES: "/phrases",
-  GRAMMAR: "/grammar",
-  EXERCISES: "/exercises",
-  PROGRESS: "/user/progress",
-};
-
-export const NAVIGATION_ROUTES = {
-  // Auth Stack
-  LOGIN: "Login" as const,
-  REGISTER: "Register" as const,
-  FORGOT_PASSWORD: "ForgotPassword" as const,
-
-  // Main App
-  HOME: "Home" as const,
-  EXPLORE: "Explore" as const,
-  PHRASES: "Phrases" as const,
-  GRAMMAR: "Grammar" as const,
-
-  // Modules
-  VOCABULARY_TOPIC: "VocabularyTopic" as const,
-  WORD_CARD: "WordCard" as const,
-  PHRASES_TOPIC: "PhrasesTopi" as const,
-  PHRASE_CARD: "PhraseCard" as const,
-  GRAMMAR_TOPIC: "GrammarTopic" as const,
-  EXERCISES: "Exercises" as const,
-  ACHIEVEMENTS: "Achievements" as const,
-  SETTINGS: "Settings" as const,
-  PROFILE: "Profile" as const,
-};
-
-export const EXERCISE_TYPES = {
-  MULTIPLE_CHOICE: "multiple_choice" as const,
-  DRAG_DROP: "drag_drop" as const,
-  AUDIO: "audio" as const,
-  FILL_BLANK: "fill_blank" as const,
-};
-
-export const DIFFICULTY_LEVELS = {
-  BEGINNER: "beginner" as const,
-  INTERMEDIATE: "intermediate" as const,
-  ADVANCED: "advanced" as const,
-};
-
-export const TOAST_TYPES = {
-  SUCCESS: "success" as const,
-  ERROR: "error" as const,
-  WARNING: "warning" as const,
-  INFO: "info" as const,
-};
-
-export const DEFAULT_SETTINGS = {
-  language: "uk" as const,
-  theme: "light" as const,
-  soundEnabled: true,
-  notificationsEnabled: true,
-  offlineMode: false,
 };

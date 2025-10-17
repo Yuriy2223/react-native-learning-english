@@ -1,6 +1,5 @@
 // app/achievements.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -13,15 +12,14 @@ import {
 } from "react-native";
 import { Button } from "../components/Button";
 import { SIZES } from "../constants";
+import { showToast } from "../hooks/showToast";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
 import { useAppSelector } from "../redux/store";
 import { Achievement } from "../types";
 import { calculateProgress } from "../utils";
 
 export default function AchievementsScreen() {
   const { colors } = useTheme();
-  const { showSuccess } = useToast();
 
   const { progress: userProgress } = useAppSelector((state) => state.user);
   const { user } = useAppSelector((state) => state.auth);
@@ -35,7 +33,6 @@ export default function AchievementsScreen() {
     if (!userProgress) return;
 
     const mockAchievements: Achievement[] = [
-      // Словник досягнення
       {
         id: "first_word",
         title: "Перше слово",
@@ -70,7 +67,6 @@ export default function AchievementsScreen() {
         unlockedAt: userProgress.knownWords >= 200 ? "2024-02-01" : undefined,
       },
 
-      // Фрази досягнення
       {
         id: "first_phrase",
         title: "Перша фраза",
@@ -104,7 +100,6 @@ export default function AchievementsScreen() {
         maxProgress: 100,
       },
 
-      // Загальні досягнення
       {
         id: "points_collector",
         title: "Збирач балів",
@@ -138,7 +133,6 @@ export default function AchievementsScreen() {
         maxProgress: 30,
       },
 
-      // Граматика
       {
         id: "grammar_novice",
         title: "Новачок граматики",
@@ -229,7 +223,7 @@ export default function AchievementsScreen() {
           text: "Скинути",
           style: "destructive",
           onPress: () => {
-            showSuccess({
+            showToast.success({
               message: "Функція скидання буде доступна в майбутніх версіях",
             });
           },
@@ -243,16 +237,8 @@ export default function AchievementsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Досягнення
         </Text>
 
@@ -269,7 +255,6 @@ export default function AchievementsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Progress Overview */}
         {userProgress && (
           <View
             style={[
@@ -277,14 +262,16 @@ export default function AchievementsScreen() {
               { backgroundColor: colors.surface },
             ]}
           >
-            <Text style={[styles.overviewTitle, { color: colors.text }]}>
+            <Text style={[styles.overviewTitle, { color: colors.textPrimary }]}>
               Загальний прогрес
             </Text>
 
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <Ionicons name="library" size={24} color={colors.primary} />
-                <Text style={[styles.statNumber, { color: colors.text }]}>
+                <Text
+                  style={[styles.statNumber, { color: colors.textPrimary }]}
+                >
                   {userProgress.knownWords}
                 </Text>
                 <Text
@@ -300,7 +287,9 @@ export default function AchievementsScreen() {
                   size={24}
                   color={colors.secondary}
                 />
-                <Text style={[styles.statNumber, { color: colors.text }]}>
+                <Text
+                  style={[styles.statNumber, { color: colors.textPrimary }]}
+                >
                   {userProgress.knownPhrases}
                 </Text>
                 <Text
@@ -312,7 +301,9 @@ export default function AchievementsScreen() {
 
               <View style={styles.statCard}>
                 <Ionicons name="trophy" size={24} color={colors.warning} />
-                <Text style={[styles.statNumber, { color: colors.text }]}>
+                <Text
+                  style={[styles.statNumber, { color: colors.textPrimary }]}
+                >
                   {unlockedAchievements.length}
                 </Text>
                 <Text
@@ -324,7 +315,9 @@ export default function AchievementsScreen() {
 
               <View style={styles.statCard}>
                 <Ionicons name="flame" size={24} color={colors.error} />
-                <Text style={[styles.statNumber, { color: colors.text }]}>
+                <Text
+                  style={[styles.statNumber, { color: colors.textPrimary }]}
+                >
                   {userProgress.streak}
                 </Text>
                 <Text
@@ -337,10 +330,9 @@ export default function AchievementsScreen() {
           </View>
         )}
 
-        {/* Unlocked Achievements */}
         {unlockedAchievements.length > 0 && (
           <View style={styles.achievementsSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
               Отримані досягнення ({unlockedAchievements.length})
             </Text>
 
@@ -375,7 +367,7 @@ export default function AchievementsScreen() {
                       <Text
                         style={[
                           styles.achievementTitle,
-                          { color: colors.text },
+                          { color: colors.textPrimary },
                         ]}
                       >
                         {achievement.title}
@@ -428,10 +420,9 @@ export default function AchievementsScreen() {
           </View>
         )}
 
-        {/* Locked Achievements */}
         {lockedAchievements.length > 0 && (
           <View style={styles.achievementsSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
               Майбутні досягнення ({lockedAchievements.length})
             </Text>
 
@@ -477,7 +468,6 @@ export default function AchievementsScreen() {
                       {achievement.description}
                     </Text>
 
-                    {/* Progress Bar */}
                     <View style={styles.progressContainer}>
                       <View style={styles.progressInfo}>
                         <Text
@@ -532,7 +522,6 @@ export default function AchievementsScreen() {
           </View>
         )}
 
-        {/* Action Buttons */}
         <View style={styles.actionsContainer}>
           <Button
             title="Поділитися прогресом"
@@ -565,9 +554,7 @@ const styles = StyleSheet.create({
     paddingTop: SIZES.spacing.lg,
     paddingBottom: SIZES.spacing.md,
   },
-  backButton: {
-    padding: SIZES.spacing.sm,
-  },
+
   headerTitle: {
     flex: 1,
     fontSize: SIZES.fontSize.lg,

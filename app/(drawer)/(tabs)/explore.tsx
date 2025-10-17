@@ -1,4 +1,3 @@
-// app/(drawer)(tabs)/explore.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
@@ -74,9 +73,8 @@ export default function ExploreScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Модулі навчання
         </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
@@ -84,7 +82,6 @@ export default function ExploreScreen() {
         </Text>
       </View>
 
-      {/* Modules Grid */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -98,7 +95,6 @@ export default function ExploreScreen() {
               onPress={() => handleModulePress(module.route)}
               activeOpacity={0.7}
             >
-              {/* Icon Container */}
               <View
                 style={[
                   styles.iconContainer,
@@ -108,12 +104,10 @@ export default function ExploreScreen() {
                 <Ionicons name={module.icon} size={32} color={module.color} />
               </View>
 
-              {/* Module Title */}
-              <Text style={[styles.moduleTitle, { color: colors.text }]}>
+              <Text style={[styles.moduleTitle, { color: colors.textPrimary }]}>
                 {module.title}
               </Text>
 
-              {/* Arrow Icon */}
               <View style={styles.arrowContainer}>
                 <Ionicons
                   name="chevron-forward"

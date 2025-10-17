@@ -1,7 +1,8 @@
-// app/(auth)/register.tsx
+import { Logo } from "@/components/Logo";
+import { SignupFormData } from "@/types/auth.type";
+import { goBack, navigate } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
 import {
@@ -11,34 +12,37 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { SIZES } from "../../constants";
+import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { useTheme } from "../../hooks/useTheme";
-import { useToast } from "../../hooks/useToast";
-import { useAppDispatch } from "../../redux/store";
-import { apiService } from "../../services/api";
-import { RegisterFormData } from "../../types";
-import { authUtils } from "../../utils";
-import { registerSchema } from "../../validation";
 import { registerUser } from "../../redux/auth/operations";
-import { setUser } from "../../redux/auth/slice";
+import { useAppDispatch } from "../../redux/store";
+import { registerSchema } from "../../validation";
 
 export default function RegisterScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { showSuccess, showError, showInfo } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
+    signInWithGoogle,
+    isLoading: isGoogleLoading,
+    isReady: isGoogleReady,
+  } = useGoogleAuth({
+    successMessage: "Акаунт Google успішно створено!",
+    redirectTo: "/home",
+  });
+
+  const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<RegisterFormData>({
-    resolver: yupResolver(registerSchema) as Resolver<RegisterFormData>,
+  } = useForm<SignupFormData>({
+    resolver: yupResolver(registerSchema) as Resolver<SignupFormData>,
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -48,111 +52,15 @@ export default function RegisterScreen() {
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
       await dispatch(registerUser(data)).unwrap();
-
-      showSuccess({
-        message: "Акаунт успішно створено!",
-      });
-
-      router.replace("/home");
-    } catch (error) {
+      navigate("/(auth)/verify-email", { email: data.email });
+    } catch (error: any) {
       console.error("Помилка реєстрації:", error);
-      showError({
-        message: "Помилка реєстрації. Спробуйте ще раз.",
-      });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleRegister = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
-      const result = await socialAuthService.signInWithGoogle();
-
-      if (result.type === "success" && result.user && result.token) {
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
-
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
-
-        dispatch(setUser(fullUser));
-
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}! Акаунт створено через Google`,
-        });
-
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Реєстрацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка реєстрації через Google",
-        });
-      }
-    } catch (error) {
-      console.error("Помилка реєстрації через Google:", error);
-      showError({
-        message: "Помилка реєстрації через Google",
-      });
-    }
-  };
-
-  const handleAppleRegister = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
-
-      if (!socialAuthService.isAppleAvailable()) {
-        showError({
-          message: "Apple Sign In доступний тільки на iOS",
-        });
-        return;
-      }
-
-      const result = await socialAuthService.signInWithApple();
-
-      if (result.type === "success" && result.user && result.token) {
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
-
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
-
-        dispatch(setUser(fullUser));
-
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}! Акаунт створено через Apple ID`,
-        });
-
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Реєстрацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка реєстрації через Apple ID",
-        });
-      }
-    } catch (error) {
-      console.error("Помилка реєстрації через Apple ID:", error);
-      showError({
-        message: "Помилка реєстрації через Apple ID",
-      });
     }
   };
 
@@ -162,36 +70,12 @@ export default function RegisterScreen() {
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Створення акаунту
-        </Text>
-      </View>
+      <Logo />
 
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <View
-          style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}
-        >
-          <Text style={styles.logoText}>🎓</Text>
-        </View>
-        <Text style={[styles.welcomeText, { color: colors.text }]}>
-          Ласкаво просимо!
-        </Text>
-        <Text style={[styles.subtitleText, { color: colors.textSecondary }]}>
-          Створіть акаунт для початку навчання
-        </Text>
-      </View>
-
-      {/* Register Form */}
       <View style={styles.formContainer}>
+        <Text style={[styles.formTitle, { color: colors.textPrimary }]}>
+          Створити акаунт
+        </Text>
         <Controller
           control={control}
           name="name"
@@ -316,7 +200,6 @@ export default function RegisterScreen() {
           style={styles.registerButton}
         />
 
-        {/* Social Register */}
         <View style={styles.dividerContainer}>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
@@ -328,25 +211,19 @@ export default function RegisterScreen() {
         <View style={styles.socialButtons}>
           <Button
             title="Реєстрація через Google"
-            onPress={handleGoogleRegister}
+            onPress={signInWithGoogle}
             variant="outline"
             style={styles.socialButton}
-          />
-
-          <Button
-            title="Реєстрація через Apple"
-            onPress={handleAppleRegister}
-            variant="outline"
-            style={styles.socialButton}
+            disabled={!isGoogleReady}
+            loading={isGoogleLoading}
           />
         </View>
 
-        {/* Login Link */}
         <View style={styles.loginContainer}>
           <Text style={[styles.loginText, { color: colors.textSecondary }]}>
-            Вже маєте акаунт?{" "}
+            Вже маєте акаунт?
           </Text>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={goBack}>
             <Text style={[styles.loginLink, { color: colors.primary }]}>
               Увійти
             </Text>
@@ -363,43 +240,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: SIZES.spacing.lg,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: SIZES.spacing.lg,
-    marginTop: SIZES.spacing.md,
-  },
-  backButton: {
-    marginRight: SIZES.spacing.md,
-  },
-  headerTitle: {
-    fontSize: SIZES.fontSize.lg,
-    fontWeight: "600",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: SIZES.spacing.xl,
-  },
-  logoPlaceholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    alignItems: "center",
     justifyContent: "center",
-    marginBottom: SIZES.spacing.md,
+    padding: SIZES.spacing.lg,
+    paddingTop: SIZES.spacing.xxl + 20,
   },
-  logoText: {
-    fontSize: 32,
-  },
-  welcomeText: {
+  formTitle: {
     fontSize: SIZES.fontSize.xl,
     fontWeight: "bold",
-    marginBottom: SIZES.spacing.xs,
-  },
-  subtitleText: {
-    fontSize: SIZES.fontSize.md,
+    marginBottom: SIZES.spacing.lg,
     textAlign: "center",
   },
   formContainer: {
@@ -434,6 +282,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: SIZES.spacing.md,
+    gap: 10,
   },
   loginText: {
     fontSize: SIZES.fontSize.md,

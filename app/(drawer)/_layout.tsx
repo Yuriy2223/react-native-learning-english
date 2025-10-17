@@ -1,5 +1,3 @@
-// app/(drawer)/\_layout.tsx
-
 import { Drawer } from "expo-router/drawer";
 import React from "react";
 import { DrawerContent } from "../../components/DrawerContent";

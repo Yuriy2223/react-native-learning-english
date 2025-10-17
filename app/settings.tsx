@@ -1,10 +1,10 @@
-// app/settings.tsx
-import { navigate } from "@/utils";
+import { LanguageSelectionModal } from "@/components/LanguageSelectionModal";
+import { ResetSettingsModal } from "@/components/ResetSettingsModal";
+import { getSettingsGroups, SettingItem } from "@/components/SettingsConfig";
+import { DEFAULT_SETTINGS } from "@/types/settings.type";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -15,7 +15,6 @@ import {
 import { Button } from "../components/Button";
 import { SIZES } from "../constants";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
 import { useTranslation } from "../hooks/useTranslation";
 import { saveSettings } from "../redux/settings/operations";
 import {
@@ -23,47 +22,24 @@ import {
   toggleNotifications,
   toggleOfflineMode,
   toggleSound,
-  updateTheme,
 } from "../redux/settings/slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 
 export default function SettingsScreen() {
+  const [showResetModal, setShowResetModal] = useState(false);
   const { colors, isDark, toggleTheme } = useTheme();
-  const { t, changeLanguage, currentLanguage } = useTranslation();
-  const { showSuccess, showError } = useToast();
+  const { changeLanguage, currentLanguage } = useTranslation();
   const dispatch = useAppDispatch();
-
-  const { settings, isLoading } = useAppSelector((state) => state.settings);
-  const { user } = useAppSelector((state) => state.auth);
-
+  const settings = useAppSelector((state) => state.settings.settings);
+  const isLoading = useAppSelector((state) => state.settings.isLoading);
+  const user = useAppSelector((state) => state.auth.user);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   const handleThemeToggle = async () => {
     try {
       await toggleTheme();
-      const newTheme = !isDark ? "dark" : "light";
-      dispatch(updateTheme(newTheme));
-
-      // const updatedSettings = { ...settings, theme: newTheme };
-      const updatedSettings = {
-        ...settings,
-        theme: newTheme as "light" | "dark",
-      };
-      await dispatch(saveSettings(updatedSettings));
-
-      showSuccess({
-        message: t("drawer.themeChanged", {
-          theme:
-            newTheme === "dark"
-              ? t("drawer.darkTheme")
-              : t("drawer.lightTheme"),
-        }),
-      });
     } catch (error) {
       console.error("Помилка зміни теми:", error);
-      showError({
-        message: "Помилка зміни теми",
-      });
     }
   };
 
@@ -71,265 +47,88 @@ export default function SettingsScreen() {
     try {
       await changeLanguage(language);
       setShowLanguageModal(false);
-      showSuccess({
-        message: `Мову змінено на ${
-          language === "uk" ? "українську" : "English"
-        }`,
-      });
+      await dispatch(saveSettings({ ...settings, language }));
     } catch (error) {
       console.error("Помилка зміни мови:", error);
-      showError({
-        message: "Помилка зміни мови",
-      });
     }
   };
 
   const handleSoundToggle = async () => {
     try {
+      const newValue = !settings.soundEnabled;
       dispatch(toggleSound());
-      const updatedSettings = {
-        ...settings,
-        soundEnabled: !settings.soundEnabled,
-      };
-      await dispatch(saveSettings(updatedSettings));
-
-      showSuccess({
-        message: `Звук ${!settings.soundEnabled ? "увімкнено" : "вимкнено"}`,
-      });
+      await dispatch(saveSettings({ ...settings, soundEnabled: newValue }));
     } catch (error) {
       console.error("Помилка зміни налаштувань звуку:", error);
-      showError({
-        message: "Помилка зміни налаштувань звуку",
-      });
     }
   };
 
   const handleNotificationsToggle = async () => {
     try {
+      const newValue = !settings.notificationsEnabled;
       dispatch(toggleNotifications());
-      const updatedSettings = {
-        ...settings,
-        notificationsEnabled: !settings.notificationsEnabled,
-      };
-      await dispatch(saveSettings(updatedSettings));
-
-      showSuccess({
-        message: `Сповіщення ${
-          !settings.notificationsEnabled ? "увімкнено" : "вимкнено"
-        }`,
-      });
+      await dispatch(
+        saveSettings({ ...settings, notificationsEnabled: newValue })
+      );
     } catch (error) {
       console.error("Помилка зміни налаштувань сповіщень:", error);
-      showError({
-        message: "Помилка зміни налаштувань сповіщень",
-      });
     }
   };
 
   const handleOfflineModeToggle = async () => {
     try {
+      const newValue = !settings.offlineMode;
       dispatch(toggleOfflineMode());
-      const updatedSettings = {
-        ...settings,
-        offlineMode: !settings.offlineMode,
-      };
-      await dispatch(saveSettings(updatedSettings));
-
-      showSuccess({
-        message: `Офлайн режим ${
-          !settings.offlineMode ? "увімкнено" : "вимкнено"
-        }`,
-      });
+      await dispatch(saveSettings({ ...settings, offlineMode: newValue }));
     } catch (error) {
       console.error("Помилка зміни офлайн режиму:", error);
-      showError({
-        message: "Помилка зміни офлайн режиму",
-      });
     }
   };
 
   const handleResetSettings = () => {
-    Alert.alert(
-      "Скинути налаштування",
-      "Ви впевнені, що хочете скинути всі налаштування до стандартних?",
-      [
-        {
-          text: "Скасувати",
-          style: "cancel",
-        },
-        {
-          text: "Скинути",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              dispatch(resetSettings());
-              await dispatch(
-                saveSettings({
-                  language: "uk",
-                  theme: "light",
-                  soundEnabled: true,
-                  notificationsEnabled: true,
-                  offlineMode: false,
-                })
-              );
-
-              showSuccess({
-                message: "Налаштування скинуто до стандартних",
-              });
-            } catch (error) {
-              console.error("Помилка скидання налаштувань:", error);
-              showError({
-                message: "Помилка скидання налаштувань",
-              });
-            }
-          },
-        },
-      ]
-    );
+    setShowResetModal(true);
   };
 
-  const settingsGroups = [
-    {
-      title: "Загальні",
-      items: [
-        {
-          id: "language",
-          title: "Мова інтерфейсу",
-          subtitle: currentLanguage === "uk" ? "Українська" : "English",
-          icon: "language",
-          type: "navigation",
-          onPress: () => setShowLanguageModal(true),
-        },
-        {
-          id: "theme",
-          title: isDark ? "Темна тема" : "Світла тема",
-          subtitle: "Автоматична зміна за системою",
-          icon: isDark ? "moon" : "sunny",
-          type: "switch",
-          value: isDark,
-          onToggle: handleThemeToggle,
-        },
-      ],
-    },
-    {
-      title: "Навчання",
-      items: [
-        {
-          id: "sound",
-          title: "Звукові ефекти",
-          subtitle: "Озвучення слів та інтерфейсу",
-          icon: "volume-high",
-          type: "switch",
-          value: settings.soundEnabled,
-          onToggle: handleSoundToggle,
-        },
-        {
-          id: "notifications",
-          title: "Push-сповіщення",
-          subtitle: "Нагадування про навчання",
-          icon: "notifications",
-          type: "switch",
-          value: settings.notificationsEnabled,
-          onToggle: handleNotificationsToggle,
-        },
-        {
-          id: "offline",
-          title: "Офлайн режим",
-          subtitle: "Завантаження контенту для офлайн",
-          icon: "cloud-offline",
-          type: "switch",
-          value: settings.offlineMode,
-          onToggle: handleOfflineModeToggle,
-        },
-      ],
-    },
-    {
-      title: "Акаунт",
-      items: [
-        {
-          id: "profile",
-          title: "Профіль користувача",
-          subtitle: user?.email || "Налаштування профілю",
-          icon: "person",
-          type: "navigation",
-          // onPress: () => router.push("/profile"),
-          onPress: () => navigate("/settings"),
-        },
-        {
-          id: "privacy",
-          title: "Конфіденційність",
-          subtitle: "Політика конфіденційності",
-          icon: "shield-checkmark",
-          type: "navigation",
-          onPress: () => {
-            showSuccess({
-              message: "Розділ буде доступний незабаром",
-            });
-          },
-        },
-      ],
-    },
-    {
-      title: "Підтримка",
-      items: [
-        {
-          id: "help",
-          title: "Допомога",
-          subtitle: "FAQ та підтримка",
-          icon: "help-circle",
-          type: "navigation",
-          onPress: () => {
-            showSuccess({
-              message: "Розділ допомоги буде доступний незабаром",
-            });
-          },
-        },
-        {
-          id: "feedback",
-          title: "Зворотний зв'язок",
-          subtitle: "Залишити відгук про застосунок",
-          icon: "chatbubble-ellipses",
-          type: "navigation",
-          onPress: () => {
-            showSuccess({
-              message: "Форма зворотного зв'язку буде додана пізніше",
-            });
-          },
-        },
-        {
-          id: "about",
-          title: "Про застосунок",
-          subtitle: "Версія 1.0.0",
-          icon: "information-circle",
-          type: "navigation",
-          onPress: () => {
-            Alert.alert(
-              "English Learning App",
-              "Версія: 1.0.0\nРозроблено для вивчення англійської мови\n\n© 2024 English Learning App",
-              [{ text: "OK" }]
-            );
-          },
-        },
-      ],
-    },
-  ];
+  const confirmResetSettings = async () => {
+    try {
+      dispatch(resetSettings());
+      await dispatch(saveSettings(DEFAULT_SETTINGS));
+      setShowResetModal(false);
+    } catch (error) {
+      console.error("Помилка скидання налаштувань:", error);
+    }
+  };
 
-  const renderSettingItem = (item: any) => (
+  const settingsGroups = getSettingsGroups({
+    currentLanguage,
+    isDark,
+    soundEnabled: settings.soundEnabled,
+    notificationsEnabled: settings.notificationsEnabled,
+    offlineMode: settings.offlineMode,
+    userEmail: user?.email,
+    onLanguagePress: () => setShowLanguageModal(true),
+    onThemeToggle: handleThemeToggle,
+    onSoundToggle: handleSoundToggle,
+    onNotificationsToggle: handleNotificationsToggle,
+    onOfflineModeToggle: handleOfflineModeToggle,
+  });
+
+  const renderSettingItem = (item: SettingItem) => (
     <TouchableOpacity
       key={item.id}
       style={[styles.settingItem, { backgroundColor: colors.surface }]}
-      onPress={item.onPress}
+      onPress={item.type === "navigation" ? item.onPress : undefined}
       disabled={item.type === "switch"}
       activeOpacity={item.type === "navigation" ? 0.7 : 1}
     >
       <View
         style={[styles.settingIcon, { backgroundColor: colors.primary + "20" }]}
       >
-        <Ionicons name={item.icon} size={20} color={colors.primary} />
+        <Ionicons name={item.icon as any} size={20} color={colors.primary} />
       </View>
 
       <View style={styles.settingContent}>
-        <Text style={[styles.settingTitle, { color: colors.text }]}>
+        <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
           {item.title}
         </Text>
         <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>
@@ -362,20 +161,10 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Налаштування
         </Text>
-
-        <View style={styles.placeholder} />
       </View>
 
       <ScrollView
@@ -385,7 +174,7 @@ export default function SettingsScreen() {
       >
         {settingsGroups.map((group, groupIndex) => (
           <View key={groupIndex} style={styles.settingGroup}>
-            <Text style={[styles.groupTitle, { color: colors.text }]}>
+            <Text style={[styles.groupTitle, { color: colors.textPrimary }]}>
               {group.title}
             </Text>
 
@@ -395,7 +184,6 @@ export default function SettingsScreen() {
           </View>
         ))}
 
-        {/* Reset Button */}
         <View style={styles.resetContainer}>
           <Button
             title="Скинути налаштування"
@@ -408,64 +196,20 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Language Selection Modal */}
-      {showLanguageModal && (
-        <View style={styles.modalOverlay}>
-          <View
-            style={[styles.modalContent, { backgroundColor: colors.surface }]}
-          >
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Оберіть мову
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.languageOption,
-                currentLanguage === "uk" && {
-                  backgroundColor: colors.primary + "20",
-                },
-              ]}
-              onPress={() => handleLanguageChange("uk")}
-            >
-              <Text style={[styles.languageText, { color: colors.text }]}>
-                🇺🇦 Українська
-              </Text>
-              {currentLanguage === "uk" && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.languageOption,
-                currentLanguage === "en" && {
-                  backgroundColor: colors.primary + "20",
-                },
-              ]}
-              onPress={() => handleLanguageChange("en")}
-            >
-              <Text style={[styles.languageText, { color: colors.text }]}>
-                🇺🇸 English
-              </Text>
-              {currentLanguage === "en" && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.modalCloseButton,
-                { backgroundColor: colors.border },
-              ]}
-              onPress={() => setShowLanguageModal(false)}
-            >
-              <Text style={[styles.modalCloseText, { color: colors.text }]}>
-                Скасувати
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      <LanguageSelectionModal
+        visible={showLanguageModal}
+        colors={colors}
+        currentLanguage={currentLanguage}
+        onSelectLanguage={handleLanguageChange}
+        onClose={() => setShowLanguageModal(false)}
+      />
+      <ResetSettingsModal
+        visible={showResetModal}
+        colors={colors}
+        isLoading={isLoading}
+        onConfirm={confirmResetSettings}
+        onCancel={() => setShowResetModal(false)}
+      />
     </View>
   );
 }
@@ -478,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: SIZES.spacing.lg,
-    paddingTop: SIZES.spacing.lg,
+    paddingTop: SIZES.spacing.xxl,
     paddingBottom: SIZES.spacing.md,
   },
   backButton: {

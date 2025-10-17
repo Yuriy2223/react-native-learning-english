@@ -1,5 +1,6 @@
-// app/(tabs)/grammar.tsx
+import { Topic } from "@/types/grammar.type";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   TextInput as RNTextInput,
@@ -9,149 +10,47 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SIZES } from "../../../constants";
-import { useTheme } from "../../../hooks/useTheme";
-import { Topic } from "../../../types";
-import { calculateProgress, navigate } from "../../../utils";
+import { SIZES } from "../constants";
+import { useTheme } from "../hooks/useTheme";
+import { fetchGrammarTopics } from "../redux/grammar/operations";
+import {
+  selectFilteredTopics,
+  selectGroupedTopics,
+  selectLoading,
+  selectTopics,
+} from "../redux/grammar/selectors";
+import { setSearchQuery } from "../redux/grammar/slice";
+import { useAppDispatch, useAppSelector } from "../redux/store";
+import {
+  calculateProgress,
+  getDifficultyColor,
+  getDifficultyLabel,
+} from "../utils";
 
-export default function GrammarScreen() {
+export default function GrammarTopicsScreen() {
   const { colors } = useTheme();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
+  const dispatch = useAppDispatch();
+  const topics = useAppSelector(selectTopics);
+  const filteredTopics = useAppSelector(selectFilteredTopics);
+  const groupedTopics = useAppSelector(selectGroupedTopics);
+  const isLoading = useAppSelector(selectLoading);
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
 
   useEffect(() => {
-    loadTopics();
-  }, []);
-
-  const loadTopics = async () => {
-    const mockTopics: Topic[] = [
-      {
-        id: "1",
-        title: "Present Simple",
-        description: "Теперішній простий час для звичайних дій",
-        imageUrl: null,
-        totalItems: 15,
-        completedItems: 12,
-        type: "grammar",
-        difficulty: "beginner",
-      },
-      {
-        id: "2",
-        title: "Past Simple",
-        description: "Минулий простий час для завершених дій",
-        imageUrl: null,
-        totalItems: 18,
-        completedItems: 8,
-        type: "grammar",
-        difficulty: "beginner",
-      },
-      {
-        id: "3",
-        title: "Present Continuous",
-        description: "Теперішній тривалий час для дій зараз",
-        imageUrl: null,
-        totalItems: 12,
-        completedItems: 5,
-        type: "grammar",
-        difficulty: "beginner",
-      },
-      {
-        id: "4",
-        title: "Present Perfect",
-        description: "Теперішній завершений час",
-        imageUrl: null,
-        totalItems: 20,
-        completedItems: 3,
-        type: "grammar",
-        difficulty: "intermediate",
-      },
-      {
-        id: "5",
-        title: "Modal Verbs",
-        description: "Модальні дієслова: can, must, should",
-        imageUrl: null,
-        totalItems: 16,
-        completedItems: 10,
-        type: "grammar",
-        difficulty: "intermediate",
-      },
-      {
-        id: "6",
-        title: "Conditional Sentences",
-        description: "Умовні речення та їх типи",
-        imageUrl: null,
-        totalItems: 22,
-        completedItems: 2,
-        type: "grammar",
-        difficulty: "advanced",
-      },
-      {
-        id: "7",
-        title: "Passive Voice",
-        description: "Пасивний стан дієслова",
-        imageUrl: null,
-        totalItems: 14,
-        completedItems: 0,
-        type: "grammar",
-        difficulty: "advanced",
-      },
-    ];
-    setTopics(mockTopics);
-    setFilteredTopics(mockTopics);
-  };
+    dispatch(fetchGrammarTopics());
+  }, [dispatch]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredTopics(topics);
-      return;
-    }
+    dispatch(setSearchQuery(localSearchQuery));
+  }, [localSearchQuery, dispatch]);
 
-    const filtered = topics.filter(
-      (topic) =>
-        topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        topic.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredTopics(filtered);
-  }, [searchQuery, topics]);
-
-  // const handleTopicPress = (topic: Topic) => {
-  //   router.push({
-  //     pathname: "/grammar-topic",
-  //     params: { topicId: topic.id, topicTitle: topic.title },
-  //   });
-  // };
   const handleTopicPress = (topic: Topic) => {
-    navigate("/grammar-topic", {
-      topicId: topic.id,
-      topicTitle: topic.title,
-    });
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return colors.success;
-      case "intermediate":
-        return colors.warning;
-      case "advanced":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "Початковий";
-      case "intermediate":
-        return "Середній";
-      case "advanced":
-        return "Складний";
-      default:
-        return "";
-    }
+    router.push({
+      pathname: "/grammar-topic",
+      params: {
+        topicId: topic.id,
+      },
+    } as any);
   };
 
   const getTopicIcon = (title: string) => {
@@ -164,30 +63,21 @@ export default function GrammarScreen() {
     return "school";
   };
 
-  const groupedTopics = filteredTopics.reduce((acc, topic) => {
-    if (!acc[topic.difficulty]) {
-      acc[topic.difficulty] = [];
-    }
-    acc[topic.difficulty].push(topic);
-    return acc;
-  }, {} as Record<string, Topic[]>);
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Search */}
       <View
         style={[styles.searchContainer, { backgroundColor: colors.surface }]}
       >
         <Ionicons name="search" size={20} color={colors.textSecondary} />
         <RNTextInput
-          style={[styles.searchInput, { color: colors.text }]}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Пошук граматичних тем..."
           placeholderTextColor={colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+          value={localSearchQuery}
+          onChangeText={setLocalSearchQuery}
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
+        {localSearchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setLocalSearchQuery("")}>
             <Ionicons
               name="close-circle"
               size={20}
@@ -197,11 +87,10 @@ export default function GrammarScreen() {
         )}
       </View>
 
-      {/* Statistics */}
       <View
         style={[styles.statsContainer, { backgroundColor: colors.surface }]}
       >
-        <Text style={[styles.statsTitle, { color: colors.text }]}>
+        <Text style={[styles.statsTitle, { color: colors.textPrimary }]}>
           Прогрес в граматиці
         </Text>
         <View style={styles.statsRow}>
@@ -242,22 +131,27 @@ export default function GrammarScreen() {
         </View>
       </View>
 
-      {/* Topics List */}
       <ScrollView
         style={styles.topicsList}
         contentContainerStyle={styles.topicsContent}
         showsVerticalScrollIndicator={false}
       >
-        {filteredTopics.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+              Завантаження тем...
+            </Text>
+          </View>
+        ) : filteredTopics.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="school" size={64} color={colors.textSecondary} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {searchQuery.trim() ? "Нічого не знайдено" : "Немає тем"}
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+              {localSearchQuery.trim() ? "Нічого не знайдено" : "Немає тем"}
             </Text>
             <Text
               style={[styles.emptySubtitle, { color: colors.textSecondary }]}
             >
-              {searchQuery.trim()
+              {localSearchQuery.trim()
                 ? "Спробуйте змінити пошуковий запит"
                 : "Граматичні теми будуть додані пізніше"}
             </Text>
@@ -268,13 +162,23 @@ export default function GrammarScreen() {
               ([difficulty, difficultyTopics]) => (
                 <View key={difficulty} style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    <Text
+                      style={[
+                        styles.sectionTitle,
+                        { color: colors.textPrimary },
+                      ]}
+                    >
                       {getDifficultyLabel(difficulty)}
                     </Text>
                     <View
                       style={[
                         styles.difficultyIndicator,
-                        { backgroundColor: getDifficultyColor(difficulty) },
+                        {
+                          backgroundColor: getDifficultyColor(
+                            difficulty as Topic["difficulty"],
+                            colors
+                          ),
+                        },
                       ]}
                     />
                   </View>
@@ -290,27 +194,29 @@ export default function GrammarScreen() {
                         onPress={() => handleTopicPress(topic)}
                         activeOpacity={0.7}
                       >
-                        {/* Topic Icon */}
                         <View
                           style={[
                             styles.topicIconContainer,
                             {
                               backgroundColor:
-                                getDifficultyColor(topic.difficulty) + "20",
+                                getDifficultyColor(topic.difficulty, colors) +
+                                "20",
                             },
                           ]}
                         >
                           <Ionicons
                             name={getTopicIcon(topic.title) as any}
                             size={24}
-                            color={getDifficultyColor(topic.difficulty)}
+                            color={getDifficultyColor(topic.difficulty, colors)}
                           />
                         </View>
 
-                        {/* Topic Content */}
                         <View style={styles.topicContent}>
                           <Text
-                            style={[styles.topicTitle, { color: colors.text }]}
+                            style={[
+                              styles.topicTitle,
+                              { color: colors.textPrimary },
+                            ]}
                             numberOfLines={1}
                           >
                             {topic.title}
@@ -326,13 +232,12 @@ export default function GrammarScreen() {
                             {topic.description}
                           </Text>
 
-                          {/* Progress */}
                           <View style={styles.progressContainer}>
                             <View style={styles.progressInfo}>
                               <Text
                                 style={[
                                   styles.progressText,
-                                  { color: colors.text },
+                                  { color: colors.textPrimary },
                                 ]}
                               >
                                 {topic.completedItems}/{topic.totalItems}
@@ -341,15 +246,14 @@ export default function GrammarScreen() {
                                 style={[
                                   styles.progressPercent,
                                   {
-                                    color: getDifficultyColor(topic.difficulty),
+                                    color: getDifficultyColor(
+                                      topic.difficulty,
+                                      colors
+                                    ),
                                   },
                                 ]}
                               >
-                                {calculateProgress(
-                                  topic.completedItems,
-                                  topic.totalItems
-                                )}
-                                %
+                                {calculateProgress(topic)}%
                               </Text>
                             </View>
 
@@ -364,19 +268,16 @@ export default function GrammarScreen() {
                                   styles.progressFill,
                                   {
                                     backgroundColor: getDifficultyColor(
-                                      topic.difficulty
+                                      topic.difficulty,
+                                      colors
                                     ),
-                                    width: `${calculateProgress(
-                                      topic.completedItems,
-                                      topic.totalItems
-                                    )}%`,
+                                    width: `${calculateProgress(topic)}%`,
                                   },
                                 ]}
                               />
                             </View>
                           </View>
 
-                          {/* Status Badge */}
                           {topic.completedItems === 0 && (
                             <View
                               style={[
@@ -499,6 +400,13 @@ const styles = StyleSheet.create({
   topicsContent: {
     paddingHorizontal: SIZES.spacing.lg,
     paddingBottom: SIZES.spacing.xl,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: SIZES.spacing.xxl * 2,
+  },
+  loadingText: {
+    fontSize: SIZES.fontSize.lg,
   },
   emptyState: {
     alignItems: "center",

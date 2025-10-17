@@ -1,4 +1,9 @@
-// app/vocabulary-card.tsx
+import { Spinner } from "@/components/Spinner";
+import {
+  selectCurrentWordIndex,
+  selectCurrentWords,
+  selectLoading,
+} from "@/redux/vocabulary/selectors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -12,36 +17,28 @@ import {
 } from "react-native";
 import { Button } from "../components/Button";
 import { SIZES } from "../constants";
+import { showToast } from "../hooks/showToast";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { addPoints, incrementKnownWords } from "../redux/user/slice";
 import {
   fetchTopicWords,
   markWordAsKnown,
 } from "../redux/vocabulary/operations";
-import {
-  nextWord,
-  previousWord,
-  updateTopicProgress,
-} from "../redux/vocabulary/slice";
+import { nextWord, updateTopicProgress } from "../redux/vocabulary/slice";
 import { audioService } from "../services/audio";
 
 const { width } = Dimensions.get("window");
 
 export default function VocabularyCardScreen() {
   const { colors } = useTheme();
-  const { showSuccess, showError } = useToast();
   const dispatch = useAppDispatch();
-
   const params = useLocalSearchParams();
   const topicId = params.topicId as string;
   const topicTitle = params.topicTitle as string;
-
-  const { currentWords, currentWordIndex, isLoading } = useAppSelector(
-    (state) => state.vocabulary
-  );
-
+  const currentWordIndex = useAppSelector(selectCurrentWordIndex);
+  const currentWords = useAppSelector(selectCurrentWords);
+  const isLoading = useAppSelector(selectLoading);
   const [showTranslation, setShowTranslation] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
@@ -51,7 +48,6 @@ export default function VocabularyCardScreen() {
     }
   }, [topicId, currentWords.length, dispatch]);
 
-  // Очищення аудіо при виході
   useEffect(() => {
     return () => {
       audioService.stop();
@@ -59,7 +55,6 @@ export default function VocabularyCardScreen() {
   }, []);
 
   const currentWord = currentWords[currentWordIndex];
-
   const handleToggleTranslation = () => {
     setShowTranslation(!showTranslation);
   };
@@ -80,21 +75,20 @@ export default function VocabularyCardScreen() {
         dispatch(addPoints(10));
         dispatch(updateTopicProgress({ topicId, increment: 1 }));
 
-        showSuccess({
+        showToast.success({
           message: "Слово додано до вивчених! +10 балів",
         });
       } else {
-        showSuccess({
+        showToast.success({
           message: "Продовжуйте вчити!",
         });
       }
 
-      // Перехід до наступного слова
       if (currentWordIndex < currentWords.length - 1) {
         dispatch(nextWord());
         setShowTranslation(false);
       } else {
-        showSuccess({
+        showToast.success({
           message: "Вітаємо! Ви завершили всі слова теми!",
           duration: 3000,
         });
@@ -102,17 +96,9 @@ export default function VocabularyCardScreen() {
       }
     } catch (error) {
       console.error("Помилка при збереженні результату:", error);
-      showError({
+      showToast.success({
         message: "Помилка при збереженні результату",
       });
-    }
-  };
-
-  const handlePreviousWord = () => {
-    if (currentWordIndex > 0) {
-      dispatch(previousWord());
-      setShowTranslation(false);
-      audioService.stop();
     }
   };
 
@@ -132,26 +118,14 @@ export default function VocabularyCardScreen() {
     } catch (error) {
       console.error("Audio playback error:", error);
       setIsPlayingAudio(false);
-      showError({
+      showToast.error({
         message: "Помилка відтворення аудіо",
       });
     }
   };
 
   if (isLoading) {
-    return (
-      <View
-        style={[
-          styles.container,
-          styles.loading,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
-          Завантаження слів...
-        </Text>
-      </View>
-    );
+    return <Spinner />;
   }
 
   if (!currentWord) {
@@ -163,7 +137,7 @@ export default function VocabularyCardScreen() {
           { backgroundColor: colors.background },
         ]}
       >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
+        <Text style={[styles.loadingText, { color: colors.textPrimary }]}>
           Слова не знайдено
         </Text>
       </View>
@@ -172,28 +146,17 @@ export default function VocabularyCardScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-
         <View style={styles.headerInfo}>
-          <Text style={[styles.topicTitle, { color: colors.text }]}>
+          <Text style={[styles.topicTitle, { color: colors.textPrimary }]}>
             {topicTitle}
           </Text>
           <Text style={[styles.progress, { color: colors.textSecondary }]}>
             {currentWordIndex + 1} з {currentWords.length}
           </Text>
         </View>
-
-        <View style={styles.placeholder} />
       </View>
 
-      {/* Progress Bar */}
       <View
         style={[styles.progressContainer, { backgroundColor: colors.border }]}
       >
@@ -208,7 +171,6 @@ export default function VocabularyCardScreen() {
         />
       </View>
 
-      {/* Card Container */}
       <View style={styles.cardContainer}>
         <View
           style={[
@@ -231,13 +193,11 @@ export default function VocabularyCardScreen() {
           ]}
         >
           <View style={styles.cardContent}>
-            {/* Word */}
             <View style={styles.wordContainer}>
-              <Text style={[styles.word, { color: colors.text }]}>
+              <Text style={[styles.word, { color: colors.textPrimary }]}>
                 {currentWord.word}
               </Text>
 
-              {/* Transcription */}
               {currentWord.transcription && (
                 <Text
                   style={[
@@ -250,7 +210,6 @@ export default function VocabularyCardScreen() {
               )}
             </View>
 
-            {/* Audio Button */}
             <TouchableOpacity
               style={[
                 styles.audioButton,
@@ -268,7 +227,6 @@ export default function VocabularyCardScreen() {
               />
             </TouchableOpacity>
 
-            {/* Translation Button/Section */}
             {!showTranslation ? (
               <Button
                 title="Переклад"
@@ -299,7 +257,6 @@ export default function VocabularyCardScreen() {
         </View>
       </View>
 
-      {/* Action Buttons */}
       <View style={styles.actionsContainer}>
         <View style={styles.responseButtons}>
           <Button
@@ -319,44 +276,6 @@ export default function VocabularyCardScreen() {
             style={[styles.responseButton, { backgroundColor: colors.success }]}
             icon={<Ionicons name="checkmark-circle" size={20} color="#FFF" />}
           />
-        </View>
-
-        {/* Navigation */}
-        <View style={styles.navigationButtons}>
-          <TouchableOpacity
-            style={[
-              styles.navButton,
-              { backgroundColor: colors.surface },
-              currentWordIndex === 0 && styles.navButtonDisabled,
-            ]}
-            onPress={handlePreviousWord}
-            disabled={currentWordIndex === 0}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={
-                currentWordIndex === 0 ? colors.textSecondary : colors.text
-              }
-            />
-          </TouchableOpacity>
-
-          <Text style={[styles.wordCounter, { color: colors.textSecondary }]}>
-            {currentWordIndex + 1} / {currentWords.length}
-          </Text>
-
-          <View
-            style={[
-              styles.navButton,
-              { backgroundColor: colors.surface, opacity: 0.5 },
-            ]}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </View>
         </View>
       </View>
     </View>
@@ -378,7 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: SIZES.spacing.lg,
-    paddingTop: SIZES.spacing.lg,
+    paddingTop: SIZES.spacing.xxl,
     paddingBottom: SIZES.spacing.md,
   },
   backButton: {
@@ -395,9 +314,6 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: SIZES.fontSize.sm,
     marginTop: 2,
-  },
-  placeholder: {
-    width: 40,
   },
   progressContainer: {
     height: 4,
@@ -481,24 +397,5 @@ const styles = StyleSheet.create({
   },
   responseButton: {
     flex: 1,
-  },
-  navigationButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  navButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
-  },
-  wordCounter: {
-    fontSize: SIZES.fontSize.md,
-    fontWeight: "500",
   },
 });

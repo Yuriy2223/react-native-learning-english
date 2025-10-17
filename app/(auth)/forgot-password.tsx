@@ -1,4 +1,4 @@
-// app/(auth)/forgot-password.tsx
+import { ForgotPasswordFormData } from "@/types/auth.type";
 import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
@@ -9,16 +9,15 @@ import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { SIZES } from "../../constants";
 import { useTheme } from "../../hooks/useTheme";
-import { useToast } from "../../hooks/useToast";
 import { forgotPassword } from "../../redux/auth/operations";
 import { useAppDispatch } from "../../redux/store";
-import { ForgotPasswordFormData } from "../../types";
+import { goBack, navigate } from "../../utils";
 import { forgotPasswordSchema } from "../../validation";
 
 export default function ForgotPasswordScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { showSuccess, showError } = useToast();
+
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -32,41 +31,28 @@ export default function ForgotPasswordScreen() {
     mode: "onChange",
   });
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      goBack();
+    } else {
+      navigate("/(auth)/login");
+    }
+  };
+
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
     try {
-      await dispatch(forgotPassword(data)).unwrap();
-
-      showSuccess({
-        message: "Лист з інструкціями відправлено на вашу пошту!",
-        duration: 3000,
-      });
-
-      router.back();
+      await dispatch(forgotPassword(data.email)).unwrap();
     } catch (error) {
       console.error("Forgot password error:", error);
-      showError({
-        message: "Помилка відправки листа. Спробуйте ще раз.",
-      });
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
       <View style={styles.content}>
-        {/* Icon */}
         <View
           style={[
             styles.iconContainer,
@@ -76,8 +62,7 @@ export default function ForgotPasswordScreen() {
           <Ionicons name="mail" size={48} color={colors.primary} />
         </View>
 
-        {/* Title */}
-        <Text style={[styles.title, { color: colors.text }]}>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
           Забули пароль?
         </Text>
 
@@ -86,7 +71,6 @@ export default function ForgotPasswordScreen() {
           для відновлення пароля.
         </Text>
 
-        {/* Form */}
         <View style={styles.form}>
           <Controller
             control={control}
@@ -121,12 +105,11 @@ export default function ForgotPasswordScreen() {
           />
         </View>
 
-        {/* Back to Login */}
         <View style={styles.loginContainer}>
           <Text style={[styles.loginText, { color: colors.textSecondary }]}>
-            Згадали пароль?{" "}
+            Згадали пароль?
           </Text>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={handleBack}>
             <Text style={[styles.loginLink, { color: colors.primary }]}>
               Увійти
             </Text>
@@ -140,13 +123,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SIZES.spacing.lg,
-    paddingTop: SIZES.spacing.lg,
-    paddingBottom: SIZES.spacing.md,
   },
   backButton: {
     padding: SIZES.spacing.sm,
@@ -189,6 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
   },
   loginText: {
     fontSize: SIZES.fontSize.md,

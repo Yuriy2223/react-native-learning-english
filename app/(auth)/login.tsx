@@ -1,4 +1,6 @@
-// app/(auth)/login.tsx
+import { Logo } from "@/components/Logo";
+import { SigninFormData } from "@/types/auth.type";
+import { navigate, replace } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
@@ -11,33 +13,36 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { SIZES } from "../../constants";
+import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { useTheme } from "../../hooks/useTheme";
-import { useToast } from "../../hooks/useToast";
-import { useAppDispatch } from "../../redux/store";
-import { apiService } from "../../services/api";
-import { LoginFormData } from "../../types";
-import { authUtils } from "../../utils";
-import { loginSchema } from "../../validation";
 import { loginUser } from "../../redux/auth/operations";
-import { setUser } from "../../redux/auth/slice";
+import { useAppDispatch } from "../../redux/store";
+import { loginSchema } from "../../validation";
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { showSuccess, showError, showInfo } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const {
+    signInWithGoogle,
+    isLoading: isGoogleLoading,
+    isReady: isGoogleReady,
+  } = useGoogleAuth({
+    successMessage: "Успішний вхід через Google!",
+    redirectTo: "/home",
+  });
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<LoginFormData>({
-    resolver: yupResolver(loginSchema) as Resolver<LoginFormData>,
+  } = useForm<SigninFormData>({
+    resolver: yupResolver(loginSchema) as Resolver<SigninFormData>,
     mode: "onChange",
     defaultValues: {
       email: "",
@@ -45,112 +50,25 @@ export default function LoginScreen() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: SigninFormData) => {
     setIsLoading(true);
     try {
       await dispatch(loginUser(data)).unwrap();
+      replace("/home");
+    } catch (err: unknown) {
+      const error = err as {
+        message?: string;
+        emailVerified?: boolean;
+        email?: string;
+      };
 
-      showSuccess({
-        message: "Успішний вхід в систему!",
-      });
-
-      router.replace("/home");
-    } catch (error) {
-      console.error("Login error:", error);
-      showError({
-        message: "Помилка входу. Перевірте дані.",
-      });
+      if (error?.emailVerified === false) {
+        navigate("/(auth)/verify-email", {
+          email: error.email || data.email,
+        });
+      }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
-      const result = await socialAuthService.signInWithGoogle();
-
-      if (result.type === "success" && result.user && result.token) {
-        // Зберігаємо токен
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
-
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
-
-        dispatch(setUser(fullUser));
-
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}!`,
-        });
-
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Авторизацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка входу через Google",
-        });
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-      showError({
-        message: "Помилка входу через Google",
-      });
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    try {
-      const { socialAuthService } = await import("../../services/socialAuth");
-
-      if (!socialAuthService.isAppleAvailable()) {
-        showError({
-          message: "Apple Sign In доступний тільки на iOS",
-        });
-        return;
-      }
-
-      const result = await socialAuthService.signInWithApple();
-
-      if (result.type === "success" && result.user && result.token) {
-        await authUtils.saveAuthToken(result.token);
-        apiService.setAuthToken(result.token);
-        await authUtils.saveUserData(result.user);
-
-        const fullUser = {
-          totalStudyHours: 0,
-          createdAt: new Date().toISOString(),
-          ...result.user,
-        };
-
-        dispatch(setUser(fullUser));
-
-        showSuccess({
-          message: `Вітаємо, ${result.user.name}! Ви увійшли через Apple ID`,
-        });
-
-        router.replace("/home");
-      } else if (result.type === "cancel") {
-        showInfo({
-          message: "Авторизацію скасовано",
-        });
-      } else {
-        showError({
-          message: result.error || "Помилка входу через Apple ID",
-        });
-      }
-    } catch (error) {
-      console.error("Apple login error:", error);
-      showError({
-        message: "Помилка входу через Apple ID",
-      });
     }
   };
 
@@ -160,24 +78,10 @@ export default function LoginScreen() {
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <View
-          style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}
-        >
-          <Text style={styles.logoText}>🎓</Text>
-        </View>
-        <Text style={[styles.appTitle, { color: colors.text }]}>
-          English Learning
-        </Text>
-        <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>
-          Вивчайте англійську легко та весело
-        </Text>
-      </View>
+      <Logo />
 
-      {/* Login Form */}
       <View style={styles.formContainer}>
-        <Text style={[styles.formTitle, { color: colors.text }]}>
+        <Text style={[styles.formTitle, { color: colors.textPrimary }]}>
           Вхід в акаунт
         </Text>
 
@@ -256,7 +160,6 @@ export default function LoginScreen() {
           style={styles.loginButton}
         />
 
-        {/* Social Login */}
         <View style={styles.dividerContainer}>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
@@ -268,23 +171,17 @@ export default function LoginScreen() {
         <View style={styles.socialButtons}>
           <Button
             title="Увійти через Google"
-            onPress={handleGoogleLogin}
+            onPress={signInWithGoogle}
             variant="outline"
             style={styles.socialButton}
-          />
-
-          <Button
-            title="Увійти через Apple"
-            onPress={handleAppleLogin}
-            variant="outline"
-            style={styles.socialButton}
+            disabled={!isGoogleReady}
+            loading={isGoogleLoading}
           />
         </View>
 
-        {/* Register Link */}
         <View style={styles.registerContainer}>
           <Text style={[styles.registerText, { color: colors.textSecondary }]}>
-            Немає акаунту?{" "}
+            Немає акаунту?
           </Text>
           <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
             <Text style={[styles.registerLink, { color: colors.primary }]}>
@@ -305,30 +202,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     padding: SIZES.spacing.lg,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: SIZES.spacing.xxl,
-  },
-  logoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SIZES.spacing.md,
-  },
-  logoText: {
-    fontSize: 40,
-  },
-  appTitle: {
-    fontSize: SIZES.fontSize.xxl,
-    fontWeight: "bold",
-    marginBottom: SIZES.spacing.xs,
-  },
-  appSubtitle: {
-    fontSize: SIZES.fontSize.md,
-    textAlign: "center",
   },
   formContainer: {
     width: "100%",
@@ -374,6 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
   },
   registerText: {
     fontSize: SIZES.fontSize.md,

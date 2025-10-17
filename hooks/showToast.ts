@@ -1,7 +1,4 @@
-// hooks/useToast.ts
-import { useCallback } from "react";
 import Toast from "react-native-toast-message";
-import { TOAST_TYPES } from "../constants";
 
 interface ToastOptions {
   title?: string;
@@ -9,56 +6,41 @@ interface ToastOptions {
   duration?: number;
 }
 
-export const useToast = () => {
-  const showSuccess = useCallback((options: ToastOptions) => {
+export const showToast = {
+  success: (options: ToastOptions) => {
     Toast.show({
-      type: TOAST_TYPES.SUCCESS,
+      type: "success",
       text1: options.title || "Успіх",
       text2: options.message,
       visibilityTime: options.duration || 3000,
       position: "top",
     });
-  }, []);
-
-  const showError = useCallback((options: ToastOptions) => {
+  },
+  error: (options: ToastOptions) => {
     Toast.show({
-      type: TOAST_TYPES.ERROR,
+      type: "error",
       text1: options.title || "Помилка",
       text2: options.message,
       visibilityTime: options.duration || 4000,
       position: "top",
     });
-  }, []);
-
-  const showWarning = useCallback((options: ToastOptions) => {
+  },
+  warning: (options: ToastOptions) => {
     Toast.show({
-      type: TOAST_TYPES.WARNING,
+      type: "warning",
       text1: options.title || "Увага",
       text2: options.message,
       visibilityTime: options.duration || 3500,
       position: "top",
     });
-  }, []);
-
-  const showInfo = useCallback((options: ToastOptions) => {
+  },
+  info: (options: ToastOptions) => {
     Toast.show({
-      type: TOAST_TYPES.INFO,
+      type: "info",
       text1: options.title || "Інформація",
       text2: options.message,
       visibilityTime: options.duration || 3000,
       position: "top",
     });
-  }, []);
-
-  const hide = useCallback(() => {
-    Toast.hide();
-  }, []);
-
-  return {
-    showSuccess,
-    showError,
-    showWarning,
-    showInfo,
-    hide,
-  };
+  },
 };

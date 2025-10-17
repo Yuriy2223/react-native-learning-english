@@ -1,51 +1,32 @@
-// hooks/useTheme.ts
-import { useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
-import { COLORS } from "../constants";
-import { settingsUtils } from "../utils";
+import { COLORS } from "@/constants";
+import { saveSettings } from "@/redux/settings/operations";
+import { updateTheme } from "@/redux/settings/slice";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 
 export const useTheme = () => {
-  const systemColorScheme = useColorScheme();
-  const [isDark, setIsDark] = useState(systemColorScheme === "dark");
+  const dispatch = useAppDispatch();
+  const theme = useAppSelector((state) => state.settings.settings.theme);
+  const settings = useAppSelector((state) => state.settings.settings);
 
-  useEffect(() => {
-    const loadThemePreference = async () => {
-      try {
-        const settings = await settingsUtils.getSettings();
-        if (settings?.theme) {
-          setIsDark(settings.theme === "dark");
-        } else {
-          setIsDark(systemColorScheme === "dark");
-        }
-      } catch (error) {
-        console.error("Error loading theme preference:", error);
-        setIsDark(systemColorScheme === "dark");
-      }
-    };
-
-    loadThemePreference();
-  }, [systemColorScheme]);
+  const currentTheme = theme;
+  const colors = COLORS[currentTheme];
+  const isDark = currentTheme === "dark";
 
   const toggleTheme = async () => {
     try {
-      const newTheme = !isDark;
-      setIsDark(newTheme);
+      const newTheme: "light" | "dark" = isDark ? "light" : "dark";
+      dispatch(updateTheme(newTheme));
 
-      const currentSettings = await settingsUtils.getSettings();
-      await settingsUtils.saveSettings({
-        ...currentSettings,
-        theme: newTheme ? "dark" : "light",
-      } as any);
+      await dispatch(saveSettings({ ...settings, theme: newTheme }));
     } catch (error) {
-      console.error("Error saving theme preference:", error);
+      console.error("Error toggling theme:", error);
     }
   };
 
-  const colors = isDark ? COLORS.dark : COLORS.light;
-
   return {
-    isDark,
+    theme: currentTheme,
     colors,
+    isDark,
     toggleTheme,
   };
 };

@@ -1,4 +1,3 @@
-// services/camera.ts
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 
@@ -11,10 +10,8 @@ interface CameraResult {
 class CameraService {
   async requestPermissions(): Promise<boolean> {
     try {
-      // Запитуємо дозвіл на камеру
       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
 
-      // Запитуємо дозвіл на медіатеку
       const mediaLibraryStatus =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -42,7 +39,7 @@ class CameraService {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1], // Квадратне зображення для аватара
+        aspect: [1, 1],
         quality: 0.8,
         base64: false,
       });
@@ -81,7 +78,7 @@ class CameraService {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1], // Квадратне зображення для аватара
+        aspect: [1, 1],
         quality: 0.8,
         base64: false,
       });
@@ -133,13 +130,8 @@ class CameraService {
     );
   }
 
-  // Утілітарні методи для роботи з зображеннями
-
   async getImageInfo(uri: string) {
-    // Псевдоінформація про зображення, бо ImagePicker не дає окремого getImageAsync
     try {
-      // Можна отримати базові дані з самого URI через expo-file-system
-      // або просто повертати URI
       return { uri };
     } catch (error) {
       console.error("Get image info error:", error);
@@ -147,7 +139,6 @@ class CameraService {
     }
   }
 
-  // Перевірка чи доступна камера на пристрої
   async isCameraAvailable(): Promise<boolean> {
     try {
       const { status } = await ImagePicker.getCameraPermissionsAsync();
@@ -158,7 +149,6 @@ class CameraService {
     }
   }
 
-  // Перевірка чи доступна галерея
   async isGalleryAvailable(): Promise<boolean> {
     try {
       const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();

@@ -1,4 +1,3 @@
-// hooks/useTranslation.ts
 import { useTranslation as useI18nTranslation } from "react-i18next";
 import { saveSettings } from "../redux/settings/operations";
 import { updateLanguage } from "../redux/settings/slice";
@@ -14,7 +13,6 @@ export const useTranslation = () => {
       await i18nInstance.changeLanguage(language);
       dispatch(updateLanguage(language));
 
-      // Save to storage
       const updatedSettings = { ...settings, language };
       await dispatch(saveSettings(updatedSettings));
     } catch (error) {

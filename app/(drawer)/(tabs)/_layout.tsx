@@ -1,4 +1,3 @@
-// app/(drawer)/(tabs)/_layout.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
 import { Tabs } from "expo-router";
@@ -24,7 +23,7 @@ export default function TabLayout() {
           borderBottomColor: colors.border,
           ...SHADOWS.small,
         },
-        headerTintColor: colors.text,
+        headerTintColor: colors.textPrimary,
         headerTitleStyle: {
           fontWeight: "600",
         },
@@ -33,7 +32,7 @@ export default function TabLayout() {
             onPress={openDrawer}
             style={{ marginLeft: 16, padding: 8 }}
           >
-            <Ionicons name="menu" size={24} color={colors.text} />
+            <Ionicons name="menu" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         ),
         tabBarStyle: {
@@ -81,7 +80,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="phrases"
         options={{
           title: "Фрази",
@@ -94,9 +93,9 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
 
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="grammar"
         options={{
           title: "Граматика",
@@ -109,7 +108,7 @@ export default function TabLayout() {
             />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }
