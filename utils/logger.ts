@@ -1,5 +1,4 @@
-// utils/logger.ts
-const ENABLE_LOGS = true; // Змініть на false, щоб відключити логи
+const ENABLE_LOGS = true;
 
 export const devLog = (...args: any[]) => {
   if (__DEV__ && ENABLE_LOGS) {
@@ -19,7 +18,6 @@ export const devError = (...args: any[]) => {
   }
 };
 
-// Для окремих модулів можна створювати свої логери
 export const createLogger = (moduleName: string, enabled = true) => ({
   log: (...args: any[]) => {
     if (__DEV__ && ENABLE_LOGS && enabled) {

@@ -1,4 +1,4 @@
-// components/DrawerContent.tsx
+import { navigate } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { router } from "expo-router";
@@ -11,16 +11,15 @@ import {
   View,
 } from "react-native";
 import { SIZES } from "../constants";
+import { showToast } from "../hooks/showToast";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
 import { logoutUser } from "../redux/auth/operations";
 import { updateTheme } from "../redux/settings/slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
-import { navigate } from "@/utils";
 
 export function DrawerContent(props: any) {
   const { colors, isDark, toggleTheme } = useTheme();
-  const { showSuccess } = useToast();
+
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
@@ -29,7 +28,7 @@ export function DrawerContent(props: any) {
       await toggleTheme();
       const newTheme = !isDark ? "dark" : "light";
       dispatch(updateTheme(newTheme));
-      showSuccess({
+      showToast.success({
         message: `Тему змінено на ${newTheme === "dark" ? "темну" : "світлу"}`,
       });
     } catch (error) {
@@ -49,7 +48,7 @@ export function DrawerContent(props: any) {
         onPress: async () => {
           try {
             await dispatch(logoutUser());
-            showSuccess({
+            showToast.success({
               message: "Ви успішно вийшли з акаунту",
             });
             router.replace("/(auth)/login");
@@ -98,7 +97,7 @@ export function DrawerContent(props: any) {
       icon: "help-circle-outline",
       onPress: () => {
         props.navigation.closeDrawer();
-        showSuccess({
+        showToast.success({
           message: "Розділ підтримки буде доступний незабаром",
         });
       },
@@ -109,7 +108,7 @@ export function DrawerContent(props: any) {
       icon: "information-circle-outline",
       onPress: () => {
         props.navigation.closeDrawer();
-        showSuccess({
+        showToast.success({
           message: "English Learning App v1.0.0",
         });
       },
@@ -123,7 +122,6 @@ export function DrawerContent(props: any) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* User Profile Section */}
         <View
           style={[styles.profileSection, { backgroundColor: colors.surface }]}
         >
@@ -142,7 +140,7 @@ export function DrawerContent(props: any) {
             </Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={[styles.userName, { color: colors.text }]}>
+            <Text style={[styles.userName, { color: colors.textPrimary }]}>
               {user?.name || "Користувач"}
             </Text>
             <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
@@ -151,7 +149,6 @@ export function DrawerContent(props: any) {
           </View>
         </View>
 
-        {/* Theme Toggle */}
         <View
           style={[styles.themeSection, { backgroundColor: colors.surface }]}
         >
@@ -159,9 +156,9 @@ export function DrawerContent(props: any) {
             <Ionicons
               name={isDark ? "moon" : "sunny"}
               size={24}
-              color={colors.text}
+              color={colors.textPrimary}
             />
-            <Text style={[styles.themeText, { color: colors.text }]}>
+            <Text style={[styles.themeText, { color: colors.textPrimary }]}>
               {isDark ? "Темна тема" : "Світла тема"}
             </Text>
             <Switch
@@ -177,7 +174,6 @@ export function DrawerContent(props: any) {
           </View>
         </View>
 
-        {/* Menu Items */}
         <View style={styles.menuSection}>
           {menuItems.map((item) => (
             <TouchableOpacity
@@ -189,10 +185,10 @@ export function DrawerContent(props: any) {
               <Ionicons
                 name={item.icon as any}
                 size={24}
-                color={colors.text}
+                color={colors.textPrimary}
                 style={styles.menuIcon}
               />
-              <Text style={[styles.menuText, { color: colors.text }]}>
+              <Text style={[styles.menuText, { color: colors.textPrimary }]}>
                 {item.title}
               </Text>
               <Ionicons
@@ -205,7 +201,6 @@ export function DrawerContent(props: any) {
         </View>
       </DrawerContentScrollView>
 
-      {/* Logout Button */}
       <View style={[styles.logoutSection, { borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={[

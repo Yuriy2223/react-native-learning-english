@@ -1,4 +1,3 @@
-// app/grammar-topic.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -12,8 +11,8 @@ import {
 } from "react-native";
 import { Button } from "../components/Button";
 import { SIZES } from "../constants";
+import { showToast } from "../hooks/showToast";
 import { useTheme } from "../hooks/useTheme";
-import { useToast } from "../hooks/useToast";
 import {
   fetchTopicRules,
   markTopicAsCompleted,
@@ -21,11 +20,15 @@ import {
 import { updateTopicProgress } from "../redux/grammar/slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { addPoints } from "../redux/user/slice";
-import { calculateProgress } from "../utils";
+import {
+  calculateProgress,
+  getDifficultyColor,
+  getDifficultyLabel,
+} from "../utils";
 
 export default function GrammarTopicScreen() {
   const { colors } = useTheme();
-  const { showSuccess, showError } = useToast();
+
   const dispatch = useAppDispatch();
   const params = useLocalSearchParams();
   const topicId = params.topicId as string;
@@ -43,32 +46,6 @@ export default function GrammarTopicScreen() {
     }
   }, [topicId, dispatch]);
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return colors.success;
-      case "intermediate":
-        return colors.warning;
-      case "advanced":
-        return colors.error;
-      default:
-        return colors.textSecondary;
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "Початковий";
-      case "intermediate":
-        return "Середній";
-      case "advanced":
-        return "Складний";
-      default:
-        return "";
-    }
-  };
-
   const toggleRuleExpansion = (ruleId: string) => {
     const newExpanded = new Set(expandedRules);
     if (newExpanded.has(ruleId)) {
@@ -80,11 +57,10 @@ export default function GrammarTopicScreen() {
   };
 
   const handleCompleteRule = (ruleId: string) => {
-    // Додаємо правило як завершене
     dispatch(updateTopicProgress({ topicId, increment: 1 }));
-    dispatch(addPoints(20)); // Граматика дає найбільше балів
+    dispatch(addPoints(20));
 
-    showSuccess({
+    showToast.success({
       message: "Правило вивчено! +20 балів",
     });
   };
@@ -104,9 +80,9 @@ export default function GrammarTopicScreen() {
           onPress: async () => {
             try {
               await dispatch(markTopicAsCompleted(topicId));
-              dispatch(addPoints(100)); // Бонус за завершення теми
+              dispatch(addPoints(100));
 
-              showSuccess({
+              showToast.success({
                 message:
                   "Вітаємо! Тему граматики завершено! +100 балів бонусу!",
                 duration: 4000,
@@ -117,7 +93,7 @@ export default function GrammarTopicScreen() {
               }, 2000);
             } catch (error) {
               console.error("Error completing topic:", error);
-              showError({
+              showToast.error({
                 message: "Помилка завершення теми",
               });
             }
@@ -128,8 +104,7 @@ export default function GrammarTopicScreen() {
   };
 
   const handleTakeTest = () => {
-    // TODO: Implement grammar test
-    showSuccess({
+    showToast.success({
       message: "Тест по граматиці буде доступний незабаром",
     });
   };
@@ -143,31 +118,20 @@ export default function GrammarTopicScreen() {
           { backgroundColor: colors.background },
         ]}
       >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
+        <Text style={[styles.loadingText, { color: colors.textPrimary }]}>
           Тема не знайдена
         </Text>
       </View>
     );
   }
 
-  const progressPercent = calculateProgress(
-    currentTopic.completedItems,
-    currentTopic.totalItems
-  );
+  const progressPercent = calculateProgress(currentTopic);
   const isCompleted = currentTopic.completedItems === currentTopic.totalItems;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
           Граматика
         </Text>
 
@@ -179,18 +143,22 @@ export default function GrammarTopicScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Topic Header */}
         <View style={[styles.topicHeader, { backgroundColor: colors.surface }]}>
           <View
             style={[
               styles.topicIcon,
-              { backgroundColor: getDifficultyColor(currentTopic.difficulty) },
+              {
+                backgroundColor: getDifficultyColor(
+                  currentTopic.difficulty,
+                  colors
+                ),
+              },
             ]}
           >
             <Ionicons name="school" size={32} color="#FFFFFF" />
           </View>
 
-          <Text style={[styles.topicTitle, { color: colors.text }]}>
+          <Text style={[styles.topicTitle, { color: colors.textPrimary }]}>
             {currentTopic.title}
           </Text>
 
@@ -205,14 +173,14 @@ export default function GrammarTopicScreen() {
               styles.difficultyBadge,
               {
                 backgroundColor:
-                  getDifficultyColor(currentTopic.difficulty) + "20",
+                  getDifficultyColor(currentTopic.difficulty, colors) + "20",
               },
             ]}
           >
             <Text
               style={[
                 styles.difficultyText,
-                { color: getDifficultyColor(currentTopic.difficulty) },
+                { color: getDifficultyColor(currentTopic.difficulty, colors) },
               ]}
             >
               {getDifficultyLabel(currentTopic.difficulty)}
@@ -220,25 +188,24 @@ export default function GrammarTopicScreen() {
           </View>
         </View>
 
-        {/* Progress Section */}
         <View
           style={[
             styles.progressContainer,
             { backgroundColor: colors.surface },
           ]}
         >
-          <Text style={[styles.progressTitle, { color: colors.text }]}>
+          <Text style={[styles.progressTitle, { color: colors.textPrimary }]}>
             Прогрес вивчення
           </Text>
 
           <View style={styles.progressInfo}>
-            <Text style={[styles.progressText, { color: colors.text }]}>
+            <Text style={[styles.progressText, { color: colors.textPrimary }]}>
               {currentTopic.completedItems} з {currentTopic.totalItems} правил
             </Text>
             <Text
               style={[
                 styles.progressPercent,
-                { color: getDifficultyColor(currentTopic.difficulty) },
+                { color: getDifficultyColor(currentTopic.difficulty, colors) },
               ]}
             >
               {progressPercent}%
@@ -252,7 +219,10 @@ export default function GrammarTopicScreen() {
               style={[
                 styles.progressFill,
                 {
-                  backgroundColor: getDifficultyColor(currentTopic.difficulty),
+                  backgroundColor: getDifficultyColor(
+                    currentTopic.difficulty,
+                    colors
+                  ),
                   width: `${progressPercent}%`,
                 },
               ]}
@@ -278,11 +248,10 @@ export default function GrammarTopicScreen() {
           )}
         </View>
 
-        {/* Grammar Rules */}
         <View
           style={[styles.rulesContainer, { backgroundColor: colors.surface }]}
         >
-          <Text style={[styles.rulesTitle, { color: colors.text }]}>
+          <Text style={[styles.rulesTitle, { color: colors.textPrimary }]}>
             Граматичні правила
           </Text>
 
@@ -314,14 +283,20 @@ export default function GrammarTopicScreen() {
                           styles.ruleNumber,
                           {
                             backgroundColor: getDifficultyColor(
-                              currentTopic.difficulty
+                              currentTopic.difficulty,
+                              colors
                             ),
                           },
                         ]}
                       >
                         <Text style={styles.ruleNumberText}>{index + 1}</Text>
                       </View>
-                      <Text style={[styles.ruleTitle, { color: colors.text }]}>
+                      <Text
+                        style={[
+                          styles.ruleTitle,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
                         {rule.title}
                       </Text>
                     </View>
@@ -352,7 +327,7 @@ export default function GrammarTopicScreen() {
                           <Text
                             style={[
                               styles.examplesTitle,
-                              { color: colors.text },
+                              { color: colors.textPrimary },
                             ]}
                           >
                             Приклади:
@@ -373,7 +348,7 @@ export default function GrammarTopicScreen() {
                               <Text
                                 style={[
                                   styles.exampleText,
-                                  { color: colors.text },
+                                  { color: colors.textPrimary },
                                 ]}
                               >
                                 {example}
@@ -402,7 +377,6 @@ export default function GrammarTopicScreen() {
           )}
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.actionsContainer}>
           <Button
             title="Пройти тест"
@@ -419,7 +393,10 @@ export default function GrammarTopicScreen() {
               style={[
                 styles.completeButton,
                 {
-                  backgroundColor: getDifficultyColor(currentTopic.difficulty),
+                  backgroundColor: getDifficultyColor(
+                    currentTopic.difficulty,
+                    colors
+                  ),
                 },
               ]}
               size="large"

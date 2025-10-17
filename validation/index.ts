@@ -47,3 +47,18 @@ export const profileSchema = yup.object({
     .required("Поле обов'язкове")
     .email("Неправильний формат email"),
 });
+
+export const resetPasswordSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email("Введіть коректний email")
+    .required("Email обов'язковий"),
+  newPassword: yup
+    .string()
+    .min(6, "Пароль повинен містити мінімум 6 символів")
+    .required("Пароль обов'язковий"),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("newPassword")], "Паролі не співпадають")
+    .required("Підтвердження пароля обов'язкове"),
+});

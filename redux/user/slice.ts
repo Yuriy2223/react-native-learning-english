@@ -1,26 +1,27 @@
+import { User, UserProgress } from "@/types/user.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { UserProgress } from "../../types";
 import { loginUser, registerUser } from "../auth/operations";
 import { setUser } from "../auth/slice";
-import { fetchUserProgress, updateProgress } from "./operations";
+import { fetchUserProgress, updateProfile, updateProgress } from "./operations";
 
 interface UserState {
-  progress: UserProgress | null;
+  user?: User;
+  progress?: UserProgress;
   isLoading: boolean;
-  isError: string | null;
+  isError?: string;
   studySession: {
-    startTime: number | null;
+    startTime?: number;
     isActive: boolean;
     currentSessionMinutes: number;
   };
 }
 
 const initialState: UserState = {
-  progress: null,
+  progress: undefined,
   isLoading: false,
-  isError: null,
+  isError: undefined,
   studySession: {
-    startTime: null,
+    startTime: undefined,
     isActive: false,
     currentSessionMinutes: 0,
   },
@@ -43,7 +44,7 @@ const userSlice = createSlice({
         );
         state.studySession.currentSessionMinutes += sessionDuration;
         state.studySession.isActive = false;
-        state.studySession.startTime = null;
+        state.studySession.startTime = undefined;
       }
     },
 
@@ -80,52 +81,67 @@ const userSlice = createSlice({
     },
 
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserProgress.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchUserProgress.fulfilled, (state, action) => {
         state.isLoading = false;
         state.progress = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchUserProgress.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
       .addCase(updateProgress.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(updateProgress.fulfilled, (state, action) => {
         state.isLoading = false;
         state.progress = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(updateProgress.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
+      });
+
+    builder
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isError = undefined;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload;
       });
 
     builder
       .addCase(loginUser.fulfilled, (state) => {
-        state.progress = null;
-        state.isError = null;
+        state.progress = undefined;
+        state.isError = undefined;
       })
       .addCase(registerUser.fulfilled, (state) => {
-        state.progress = null;
-        state.isError = null;
+        state.progress = undefined;
+        state.isError = undefined;
       })
       .addCase(setUser, (state) => {
-        state.progress = null;
-        state.isError = null;
+        state.progress = undefined;
+        state.isError = undefined;
       });
   },
 });

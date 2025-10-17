@@ -1,31 +1,31 @@
+import { Phrase, Topic } from "@/types/phrases.type";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Phrase, Topic } from "../../types";
 import {
   fetchPhrasesTopics,
   fetchTopicPhrases,
   markPhraseAsKnown,
 } from "./operations";
 
-interface PhrasesState {
+export interface PhrasesState {
   topics: Topic[];
-  currentTopic: Topic | null;
+  currentTopic?: Topic;
   currentPhrases: Phrase[];
   currentPhraseIndex: number;
   searchQuery: string;
   filteredTopics: Topic[];
   isLoading: boolean;
-  isError: string | null;
+  isError?: string;
 }
 
 const initialState: PhrasesState = {
   topics: [],
-  currentTopic: null,
+  currentTopic: undefined,
   currentPhrases: [],
   currentPhraseIndex: 0,
   searchQuery: "",
   filteredTopics: [],
   isLoading: false,
-  isError: null,
+  isError: undefined,
 };
 
 const phrasesSlice = createSlice({
@@ -92,53 +92,60 @@ const phrasesSlice = createSlice({
     },
 
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPhrasesTopics.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchPhrasesTopics.fulfilled, (state, action) => {
         state.isLoading = false;
         state.topics = action.payload;
         state.filteredTopics = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchPhrasesTopics.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
       .addCase(fetchTopicPhrases.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicPhrases.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentPhrases = action.payload;
         state.currentPhraseIndex = 0;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicPhrases.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
+      .addCase(markPhraseAsKnown.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
       .addCase(markPhraseAsKnown.fulfilled, (state, action) => {
+        state.isLoading = false;
         const phrase = state.currentPhrases.find(
           (p) => p.id === action.payload.phraseId
         );
         if (phrase) {
           phrase.isKnown = action.payload.isKnown;
         }
+        state.isError = undefined;
       })
       .addCase(markPhraseAsKnown.rejected, (state, action) => {
-        state.isError = action.payload as string;
+        state.isLoading = false;
+        state.isError = action.payload;
       });
   },
 });

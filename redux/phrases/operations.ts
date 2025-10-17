@@ -1,101 +1,82 @@
-// import { createAsyncThunk } from "@reduxjs/toolkit";
-// import { apiService } from "../../services/api";
-
-// export const fetchPhrasesTopics = createAsyncThunk(
-//   "phrases/fetchTopics",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await apiService.getPhrasesTopics();
-//       return response;
-//     } catch (error) {
-//       return rejectWithValue(error.message || "Failed to fetch phrases topics");
-//     }
-//   }
-// );
-
-// export const fetchTopicPhrases = createAsyncThunk(
-//   "phrases/fetchTopicPhrases",
-//   async (topicId: string, { rejectWithValue }) => {
-//     try {
-//       const response = await apiService.getTopicPhrases(topicId);
-//       return response;
-//     } catch (error) {
-//       return rejectWithValue(error.message || "Failed to fetch phrases");
-//     }
-//   }
-// );
-
-// export const markPhraseAsKnown = createAsyncThunk(
-//   "phrases/markPhraseAsKnown",
-//   async (
-//     { phraseId, isKnown }: { phraseId: string; isKnown: boolean },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       await apiService.updatePhraseStatus(phraseId, isKnown);
-//       return { phraseId, isKnown };
-//     } catch (error) {
-//       return rejectWithValue(error.message || "Failed to update phrase status");
-//     }
-//   }
-// );
+import { showToast } from "@/hooks/showToast";
+import { apiService } from "@/services/api";
+import { Phrase, Topic } from "@/types/phrases.type";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { apiService } from "../../services/api";
 
-export const fetchPhrasesTopics = createAsyncThunk(
-  "phrases/fetchTopics",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiService.getPhrasesTopics();
-      console.log("Fetched phrases topics:", response.length);
-      return response;
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch phrases topics";
-      console.error("Error fetching phrases topics:", message);
-      return rejectWithValue(message);
+export const fetchPhrasesTopics = createAsyncThunk<
+  Topic[],
+  void,
+  { rejectValue: string }
+>("phrases/fetchTopics", async (_, { rejectWithValue }) => {
+  try {
+    const response = await apiService.request<Topic[]>("/phrases/topics");
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      showToast.error({
+        message: error.message || "Помилка завантаження тем фраз",
+      });
+      return rejectWithValue(error.message || "Помилка завантаження тем фраз");
     }
+    showToast.error({ message: "Помилка завантаження тем фраз" });
+    return rejectWithValue("Помилка завантаження тем фраз");
   }
-);
+});
 
-export const fetchTopicPhrases = createAsyncThunk(
-  "phrases/fetchTopicPhrases",
-  async (topicId: string, { rejectWithValue }) => {
-    try {
-      console.log("Fetching phrases for topic:", topicId);
-      const response = await apiService.getTopicPhrases(topicId);
-      console.log("Fetched phrases:", response.length);
-      return response;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to fetch phrases";
-      console.error("Error fetching phrases:", message);
-      return rejectWithValue(message);
+export const fetchTopicPhrases = createAsyncThunk<
+  Phrase[],
+  string,
+  { rejectValue: string }
+>("phrases/fetchTopicPhrases", async (topicId, { rejectWithValue }) => {
+  try {
+    const response = await apiService.request<Phrase[]>(
+      `/phrases/topics/${topicId}/phrases`
+    );
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      showToast.error({
+        message: error.message || "Помилка завантаження фраз",
+      });
+      return rejectWithValue(error.message || "Помилка завантаження фраз");
     }
+    showToast.error({ message: "Помилка завантаження фраз" });
+    return rejectWithValue("Помилка завантаження фраз");
   }
-);
+});
 
-export const markPhraseAsKnown = createAsyncThunk(
+export const markPhraseAsKnown = createAsyncThunk<
+  { phraseId: string; isKnown: boolean },
+  { phraseId: string; isKnown: boolean },
+  { rejectValue: string }
+>(
   "phrases/markPhraseAsKnown",
-  async (
-    { phraseId, isKnown }: { phraseId: string; isKnown: boolean },
-    { rejectWithValue }
-  ) => {
+  async ({ phraseId, isKnown }, { rejectWithValue }) => {
     try {
-      await apiService.updatePhraseStatus(phraseId, isKnown);
-      console.log(
-        `Phrase ${phraseId} marked as ${isKnown ? "known" : "unknown"}`
-      );
+      await apiService.request(`/phrases/${phraseId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ isKnown }),
+      });
+
+      showToast.success({
+        message: isKnown
+          ? "Фразу позначено як вивчену"
+          : "Статус фрази оновлено",
+        duration: 2000,
+      });
+
       return { phraseId, isKnown };
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update phrase status";
-      console.error("Error updating phrase status:", message);
-      return rejectWithValue(message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        showToast.error({
+          message: error.message || "Помилка оновлення статусу фрази",
+        });
+        return rejectWithValue(
+          error.message || "Помилка оновлення статусу фрази"
+        );
+      }
+      showToast.error({ message: "Помилка оновлення статусу фрази" });
+      return rejectWithValue("Помилка оновлення статусу фрази");
     }
   }
 );

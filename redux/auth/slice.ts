@@ -1,27 +1,27 @@
+import { User } from "@/types/user.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "../../types";
 import {
   checkAuthStatus,
   forgotPassword,
+  googleLogin,
   loginUser,
   logoutUser,
   registerUser,
+  resetPassword,
 } from "./operations";
 
 export interface AuthState {
-  user: User | null;
+  user?: User;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isError: string | null;
-  registrationMessage: string | null;
+  isError?: string;
+  registrationMessage?: string;
+  emailToVerify?: string;
 }
 
 const initialState: AuthState = {
-  user: null,
   isAuthenticated: false,
   isLoading: false,
-  isError: null,
-  registrationMessage: null,
 };
 
 const authSlice = createSlice({
@@ -29,7 +29,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
@@ -40,44 +40,51 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = true;
       state.isLoading = false;
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
-        state.isError = action.payload as string;
+        state.user = undefined;
+
+        if (typeof action.payload === "string") {
+          state.isError = action.payload;
+        } else if (action.payload && typeof action.payload === "object") {
+          state.isError = action.payload.message;
+        } else {
+          state.isError = "Помилка входу";
+        }
       });
 
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
-        state.registrationMessage = null;
+        state.isError = undefined;
+        state.registrationMessage = undefined;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.registrationMessage = action.payload.message;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
-        state.isError = action.payload as string;
+        state.user = undefined;
+        state.isError = action.payload;
       });
 
     builder
@@ -90,32 +97,46 @@ const authSlice = createSlice({
         if (action.payload) {
           state.isAuthenticated = true;
           state.user = action.payload;
-          state.isError = null;
+          state.isError = undefined;
         } else {
           state.isAuthenticated = false;
-          state.user = null;
-          state.isError = null;
+          state.user = undefined;
+          state.isError = undefined;
         }
       })
-      .addCase(checkAuthStatus.rejected, (state, action) => {
+      .addCase(checkAuthStatus.rejected, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
-        state.isError = null;
+        state.user = undefined;
+        state.isError = undefined;
       });
 
     builder
       .addCase(forgotPassword.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(forgotPassword.fulfilled, (state) => {
         state.isLoading = false;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(forgotPassword.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
+      });
+
+    builder
+      .addCase(resetPassword.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isError = undefined;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload;
       });
 
     builder
@@ -125,12 +146,30 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
-        state.isError = null;
+        state.user = undefined;
+        state.isError = undefined;
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
+      });
+
+    builder
+      .addCase(googleLogin.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.isError = undefined;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = undefined;
+        state.isError = action.payload;
       });
   },
 });

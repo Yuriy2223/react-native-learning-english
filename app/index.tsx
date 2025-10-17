@@ -1,4 +1,3 @@
-// app/index.tsx
 import { Redirect } from "expo-router";
 import { useAppSelector } from "../redux/store";
 

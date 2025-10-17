@@ -1,4 +1,7 @@
-// app/_layout.tsx
+import { ErrorScreen } from "@/components/ErrorScreen";
+import { Loader } from "@/components/Loader";
+import { selectIsError, selectIsLoading } from "@/redux/auth/selectors";
+import { clearError } from "@/redux/auth/slice";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -13,25 +16,11 @@ import { useAppDispatch, useAppSelector } from "../redux/store";
 
 SplashScreen.preventAutoHideAsync();
 
-function GlobalComponents() {
-  const { colors, isDark } = useTheme();
-
-  return (
-    <>
-      <StatusBar
-        barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={colors.background}
-      />
-      <Toast />
-    </>
-  );
-}
-
 function RootLayoutContent() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const dispatch = useAppDispatch();
-  const { isLoading: authLoading } = useAppSelector((state) => state.auth);
-
+  const isLoading = useAppSelector(selectIsLoading);
+  const isError = useAppSelector(selectIsError);
   const [fontsLoaded] = useFonts({});
 
   useEffect(() => {
@@ -48,44 +37,63 @@ function RootLayoutContent() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (fontsLoaded && !authLoading) {
+    if (fontsLoaded && !isLoading) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, authLoading]);
+  }, [fontsLoaded, isLoading]);
 
-  if (!fontsLoaded || authLoading) {
-    return null;
+  if (!fontsLoaded || isLoading) {
+    return <Loader fullScreen />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorScreen
+        message={isError}
+        onRetry={() => {
+          dispatch(clearError());
+          dispatch(checkAuthStatus());
+        }}
+      />
+    );
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
-      }}
-    >
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(drawer)" />
+    <>
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+      />
 
-      <Stack.Screen name="vocabulary-topic" />
-      <Stack.Screen name="vocabulary-card" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(drawer)" />
+        <Stack.Screen name="reset-password" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="vocabulary-topic" />
+        <Stack.Screen name="vocabulary-card" />
+        <Stack.Screen name="phrases-topic" />
+        <Stack.Screen name="phrases-card" />
+        {/* <Stack.Screen name="grammar-topic" />
+        <Stack.Screen name="exercises" /> */}
+        {/* <Stack.Screen name="achievements" /> */}
+      </Stack>
 
-      <Stack.Screen name="phrases-topic" />
-      <Stack.Screen name="phrases-card" />
-
-      <Stack.Screen name="grammar-topic" />
-      <Stack.Screen name="exercises" />
-      <Stack.Screen name="achievements" />
-      <Stack.Screen name="profile" />
-      <Stack.Screen name="settings" />
-    </Stack>
+      <Toast />
+    </>
   );
 }
 
 export default function RootLayout() {
   return (
     <AppProvider>
-      <GlobalComponents />
       <RootLayoutContent />
     </AppProvider>
   );

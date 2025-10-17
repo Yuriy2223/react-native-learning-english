@@ -1,5 +1,5 @@
-// app/(tabs)/home.tsx
-import { selectUser } from "@/redux/auth/selectors";
+import { Spinner } from "@/components/Spinner";
+import { selectIsLoading, selectUser } from "@/redux/auth/selectors";
 import { useAppSelector } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -7,69 +7,54 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../../components/Button";
 import { SIZES } from "../../../constants";
 import { useTheme } from "../../../hooks/useTheme";
-import { formatStudyTime } from "../../../utils";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const user = useAppSelector(selectUser);
+  const isLoading = useAppSelector(selectIsLoading);
 
   const handleGetStarted = () => {
     router.push("/explore");
   };
 
-  if (!user) {
-    return (
-      <View
-        style={[
-          styles.container,
-          styles.loading,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <Text style={[styles.loadingText, { color: colors.text }]}>
-          Завантаження...
-        </Text>
-      </View>
-    );
+  if (isLoading) {
+    return <Spinner />;
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Avatar Section */}
       <View style={styles.avatarSection}>
         <View
           style={[styles.avatarContainer, { backgroundColor: colors.primary }]}
         >
-          {user.avatar ? (
+          {user?.avatar ? (
             <Image source={{ uri: user.avatar }} style={styles.avatar} />
           ) : (
             <Text style={styles.avatarText}>
-              {user.name
-                .split(" ")
+              {user?.name
+                ?.split(" ")
                 .map((n) => n[0])
                 .join("")
-                .toUpperCase()}
+                .toUpperCase() ?? "?"}
             </Text>
           )}
         </View>
 
-        {/* User Name */}
-        <Text style={[styles.userName, { color: colors.text }]}>
-          {user.name}
+        <Text style={[styles.userName, { color: colors.textPrimary }]}>
+          {user?.name}
         </Text>
       </View>
 
-      {/* Study Session Block */}
       <View style={[styles.sessionBlock, { backgroundColor: colors.surface }]}>
         <View style={styles.sessionHeader}>
           <Ionicons name="time-outline" size={24} color={colors.primary} />
-          <Text style={[styles.sessionTitle, { color: colors.text }]}>
+          <Text style={[styles.sessionTitle, { color: colors.textPrimary }]}>
             Поточна сесія
           </Text>
         </View>
 
         <Text style={[styles.studyTime, { color: colors.primary }]}>
-          {formatStudyTime(user.totalStudyHours * 60)}
+          {/* {formatStudyTime(user.totalStudyHours * 60)} */}1 000 000 хв
         </Text>
 
         <Text style={[styles.studyLabel, { color: colors.textSecondary }]}>
@@ -77,7 +62,6 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      {/* Get Started Button */}
       <View style={styles.buttonSection}>
         <Button
           title="Get Started"

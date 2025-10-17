@@ -1,43 +1,22 @@
-// app/(auth)/reset-password.tsx
+import { resetPassword } from "@/redux/auth/operations";
+import { useAppDispatch } from "@/redux/store";
+import { ResetPasswordFormData } from "@/types/auth.type";
+import { resetPasswordSchema } from "@/validation";
 import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import * as yup from "yup";
-import { Button } from "../../components/Button";
-import { TextInput } from "../../components/TextInput";
-import { SIZES } from "../../constants";
-import { useTheme } from "../../hooks/useTheme";
-import { useToast } from "../../hooks/useToast";
-import { apiService } from "../../services/api";
-import { navigate } from "../../utils";
-
-interface ResetPasswordFormData {
-  email: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-const resetPasswordSchema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Введіть коректний email")
-    .required("Email обов'язковий"),
-  newPassword: yup
-    .string()
-    .min(6, "Пароль повинен містити мінімум 6 символів")
-    .required("Пароль обов'язковий"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("newPassword")], "Паролі не співпадають")
-    .required("Підтвердження пароля обов'язкове"),
-});
+import { Button } from "../components/Button";
+import { TextInput } from "../components/TextInput";
+import { SIZES } from "../constants";
+import { useTheme } from "../hooks/useTheme";
+import { navigate } from "../utils";
 
 export default function ResetPasswordScreen() {
+  const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { showSuccess, showError } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const params = useLocalSearchParams<{ token?: string }>();
 
@@ -53,54 +32,62 @@ export default function ResetPasswordScreen() {
   });
 
   const onSubmit = async (data: ResetPasswordFormData) => {
-    if (!params.token) {
-      showError({
-        message: "Недійсне посилання для скидання пароля",
-      });
-      return;
-    }
+    if (!params.token) return;
 
     setIsLoading(true);
     try {
-      await apiService.resetPassword(
-        data.email,
-        params.token,
-        data.newPassword
-      );
-
-      showSuccess({
-        message: "Пароль успішно змінено!",
-        duration: 3000,
-      });
+      await dispatch(
+        resetPassword({
+          email: data.email,
+          token: params.token,
+          newPassword: data.newPassword,
+        })
+      ).unwrap();
 
       setTimeout(() => {
         navigate("/login");
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Reset password error:", error);
-      showError({
-        message: error.message || "Помилка скидання пароля. Спробуйте ще раз.",
-      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (!params.token) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.content}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: colors.error + "20" },
+            ]}
+          >
+            <Ionicons name="alert-circle" size={48} color={colors.error} />
+          </View>
+
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            Недійсне посилання
+          </Text>
+
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Посилання для скидання пароля недійсне або застаріло
+          </Text>
+
+          <Button
+            title="Повернутися до входу"
+            onPress={() => navigate("/login")}
+            style={styles.submitButton}
+          />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigate("/login")}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
       <View style={styles.content}>
-        {/* Icon */}
         <View
           style={[
             styles.iconContainer,
@@ -110,14 +97,14 @@ export default function ResetPasswordScreen() {
           <Ionicons name="lock-closed" size={48} color={colors.primary} />
         </View>
 
-        {/* Title */}
-        <Text style={[styles.title, { color: colors.text }]}>Новий пароль</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
+          Новий пароль
+        </Text>
 
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Введіть ваш email та новий пароль
         </Text>
 
-        {/* Form */}
         <View style={styles.form}>
           <Controller
             control={control}
@@ -198,10 +185,9 @@ export default function ResetPasswordScreen() {
           />
         </View>
 
-        {/* Back to Login */}
         <View style={styles.loginContainer}>
           <Text style={[styles.loginText, { color: colors.textSecondary }]}>
-            Згадали пароль?{" "}
+            Згадали пароль?
           </Text>
           <TouchableOpacity onPress={() => navigate("/login")}>
             <Text style={[styles.loginLink, { color: colors.primary }]}>
@@ -215,9 +201,7 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -225,9 +209,7 @@ const styles = StyleSheet.create({
     paddingTop: SIZES.spacing.lg,
     paddingBottom: SIZES.spacing.md,
   },
-  backButton: {
-    padding: SIZES.spacing.sm,
-  },
+  backButton: { padding: SIZES.spacing.sm },
   content: {
     flex: 1,
     justifyContent: "center",
@@ -266,6 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
   },
   loginText: {
     fontSize: SIZES.fontSize.md,

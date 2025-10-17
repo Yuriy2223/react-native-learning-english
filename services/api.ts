@@ -1,202 +1,59 @@
-// services/api.ts
-import { API_ENDPOINTS } from "../constants";
-import {
-  GoogleAuthResponse,
-  GrammarRule,
-  Phrase,
-  SigninFormData,
-  SigninResponse,
-  SignupFormData,
-  SignupResponse,
-  Topic,
-  User,
-  UserProgress,
-  Word,
-} from "../types";
-import { authUtils } from "../utils";
+import Constants from "expo-constants";
 
 class ApiService {
-  private baseUrl = API_ENDPOINTS.BASE_URL;
-  private authToken: string | null = null;
+  private baseUrl = Constants.expoConfig?.extra?.baseUrl;
+  private authToken?: string;
 
-  // оновлення токена
-  setAuthToken(token: string | null) {
+  constructor() {
+    if (!this.baseUrl) {
+      throw new Error("Base URL is not defined in app config");
+    }
+  }
+
+  setAuthToken(token: string) {
     this.authToken = token;
   }
 
-  // очищення токена
   clearAuthToken() {
-    this.authToken = null;
+    this.authToken = undefined;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = this.authToken || (await authUtils.getAuthToken());
-
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(this.authToken && { Authorization: `Bearer ${this.authToken}` }),
         ...options.headers,
       },
       ...options,
     };
 
     const url = `${this.baseUrl}${endpoint}`;
-    console.log(`API Request: ${options.method || "GET"} ${url}`);
 
     try {
       const response = await fetch(url, config);
-      console.log(`Response: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `HTTP ${response.status}`;
-        console.error(`API Error:`, errorMessage);
         const error: any = new Error(errorMessage);
         error.emailVerified = errorData.emailVerified;
         error.email = errorData.email;
         throw error;
       }
 
-      const data = await response.json();
-      console.log(`API Success:`, endpoint);
-      return data;
+      return await response.json();
     } catch (error) {
-      console.error(`Network Error:`, error);
+      console.error("API Error:", error);
       throw error;
     }
-  }
-
-  // ========== AUTH ENDPOINTS ==========
-  async login(data: SigninFormData): Promise<SigninResponse> {
-    return this.request<SigninResponse>("/api/auth/signin", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async register(data: SignupFormData): Promise<SignupResponse> {
-    return this.request<SignupResponse>("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      }),
-    });
-  }
-
-  async forgotPassword(email: string): Promise<void> {
-    await this.request("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  async resetPassword(
-    email: string,
-    token: string,
-    newPassword: string
-  ): Promise<void> {
-    await this.request("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ email, token, newPassword }),
-    });
-  }
-
-  async googleAuth(idToken: string): Promise<GoogleAuthResponse> {
-    return this.request<GoogleAuthResponse>("/api/auth/google", {
-      method: "POST",
-      body: JSON.stringify({ idToken }),
-    });
-  }
-
-  async resendVerificationEmail(email: string): Promise<void> {
-    await this.request("/api/auth/resend-verification", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  // ========== USER ENDPOINTS ==========
-  async getUserProfile(): Promise<User> {
-    return this.request<User>("/api/users/profile");
-  }
-
-  async updateUserProfile(data: Partial<User>): Promise<User> {
-    return this.request<User>("/api/users/profile", {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getUserProgress(): Promise<UserProgress> {
-    return this.request<UserProgress>("/api/users/progress");
-  }
-
-  async updateUserProgress(
-    progressData: Partial<UserProgress>
-  ): Promise<UserProgress> {
-    return this.request<UserProgress>("/api/users/progress", {
-      method: "PATCH",
-      body: JSON.stringify(progressData),
-    });
-  }
-
-  // ========== VOCABULARY ENDPOINTS ==========
-  async getVocabularyTopics(): Promise<Topic[]> {
-    return this.request<Topic[]>("/api/vocabulary/topics");
-  }
-
-  async getTopicWords(topicId: string): Promise<Word[]> {
-    return this.request<Word[]>(`/api/vocabulary/topics/${topicId}/words`);
-  }
-
-  async updateWordStatus(wordId: string, isKnown: boolean): Promise<void> {
-    await this.request(`/api/vocabulary/words/${wordId}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ isKnown }),
-    });
-  }
-
-  // ========== PHRASES ENDPOINTS ==========
-  async getPhrasesTopics(): Promise<Topic[]> {
-    return this.request<Topic[]>("/api/phrases/topics");
-  }
-
-  async getTopicPhrases(topicId: string): Promise<Phrase[]> {
-    return this.request<Phrase[]>(`/api/phrases/topics/${topicId}/phrases`);
-  }
-
-  async updatePhraseStatus(phraseId: string, isKnown: boolean): Promise<void> {
-    await this.request(`/api/phrases/${phraseId}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ isKnown }),
-    });
-  }
-
-  // ========== GRAMMAR ENDPOINTS ==========
-  async getGrammarTopics(): Promise<Topic[]> {
-    return this.request<Topic[]>("/api/grammar/topics");
-  }
-
-  async getTopicRules(topicId: string): Promise<GrammarRule[]> {
-    return this.request<GrammarRule[]>(`/api/grammar/topics/${topicId}/rules`);
-  }
-
-  async markGrammarTopicCompleted(topicId: string): Promise<void> {
-    await this.request(`/api/grammar/topics/${topicId}/complete`, {
-      method: "POST",
-    });
   }
 }
 
 export const apiService = new ApiService();
+
 /*************************************************************************** */
-// // services/api.ts
+
 // import { API_ENDPOINTS } from "../constants";
 // import {
 //   GrammarRule,
@@ -216,240 +73,240 @@ export const apiService = new ApiService();
 
 //   // ========== MOCK DATA (тимчасово) ==========
 
-//   // Vocabulary mock data
-//   private mockVocabularyTopics: Topic[] = [
-//     {
-//       id: "v1",
-//       title: "Повсякденна лексика",
-//       description: "Основні слова для щоденного спілкування",
-//       imageUrl: null,
-//       totalItems: 5,
-//       completedItems: 0,
-//       type: "vocabulary",
-//       difficulty: "beginner",
-//     },
-//     {
-//       id: "v2",
-//       title: "Професії та робота",
-//       description: "Назви професій та слова пов'язані з роботою",
-//       imageUrl: null,
-//       totalItems: 5,
-//       completedItems: 0,
-//       type: "vocabulary",
-//       difficulty: "intermediate",
-//     },
-//     {
-//       id: "v3",
-//       title: "Їжа та напої",
-//       description: "Назви продуктів харчування та напоїв",
-//       imageUrl: null,
-//       totalItems: 5,
-//       completedItems: 0,
-//       type: "vocabulary",
-//       difficulty: "beginner",
-//     },
-//     {
-//       id: "v4",
-//       title: "Подорожі",
-//       description: "Слова для подорожей та туризму",
-//       imageUrl: null,
-//       totalItems: 5,
-//       completedItems: 0,
-//       type: "vocabulary",
-//       difficulty: "intermediate",
-//     },
-//   ];
+// // Vocabulary mock data
+// private mockVocabularyTopics: Topic[] = [
+//   {
+//     id: "v1",
+//     title: "Повсякденна лексика",
+//     description: "Основні слова для щоденного спілкування",
+//     imageUrl: null,
+//     totalItems: 5,
+//     completedItems: 0,
+//     type: "vocabulary",
+//     difficulty: "beginner",
+//   },
+//   {
+//     id: "v2",
+//     title: "Професії та робота",
+//     description: "Назви професій та слова пов'язані з роботою",
+//     imageUrl: null,
+//     totalItems: 5,
+//     completedItems: 0,
+//     type: "vocabulary",
+//     difficulty: "intermediate",
+//   },
+//   {
+//     id: "v3",
+//     title: "Їжа та напої",
+//     description: "Назви продуктів харчування та напоїв",
+//     imageUrl: null,
+//     totalItems: 5,
+//     completedItems: 0,
+//     type: "vocabulary",
+//     difficulty: "beginner",
+//   },
+//   {
+//     id: "v4",
+//     title: "Подорожі",
+//     description: "Слова для подорожей та туризму",
+//     imageUrl: null,
+//     totalItems: 5,
+//     completedItems: 0,
+//     type: "vocabulary",
+//     difficulty: "intermediate",
+//   },
+// ];
 
-//   private mockWords: { [topicId: string]: Word[] } = {
-//     v1: [
-//       {
-//         id: "w1",
-//         word: "hello",
-//         translation: "привіт",
-//         transcription: "/həˈloʊ/",
-//         audioUrl: undefined,
-//         topicId: "v1",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w2",
-//         word: "goodbye",
-//         translation: "до побачення",
-//         transcription: "/ɡʊdˈbaɪ/",
-//         audioUrl: undefined,
-//         topicId: "v1",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w3",
-//         word: "please",
-//         translation: "будь ласка",
-//         transcription: "/pliːz/",
-//         audioUrl: undefined,
-//         topicId: "v1",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w4",
-//         word: "thank you",
-//         translation: "дякую",
-//         transcription: "/θæŋk juː/",
-//         audioUrl: undefined,
-//         topicId: "v1",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w5",
-//         word: "sorry",
-//         translation: "вибачте",
-//         transcription: "/ˈsɒri/",
-//         audioUrl: undefined,
-//         topicId: "v1",
-//         isKnown: false,
-//       },
-//     ],
-//     v2: [
-//       {
-//         id: "w6",
-//         word: "teacher",
-//         translation: "вчитель",
-//         transcription: "/ˈtiːtʃər/",
-//         audioUrl: undefined,
-//         topicId: "v2",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w7",
-//         word: "doctor",
-//         translation: "лікар",
-//         transcription: "/ˈdɒktər/",
-//         audioUrl: undefined,
-//         topicId: "v2",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w8",
-//         word: "engineer",
-//         translation: "інженер",
-//         transcription: "/ˌendʒɪˈnɪər/",
-//         audioUrl: undefined,
-//         topicId: "v2",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w9",
-//         word: "lawyer",
-//         translation: "юрист",
-//         transcription: "/ˈlɔːjər/",
-//         audioUrl: undefined,
-//         topicId: "v2",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w10",
-//         word: "manager",
-//         translation: "менеджер",
-//         transcription: "/ˈmænɪdʒər/",
-//         audioUrl: undefined,
-//         topicId: "v2",
-//         isKnown: false,
-//       },
-//     ],
-//     v3: [
-//       {
-//         id: "w11",
-//         word: "bread",
-//         translation: "хліб",
-//         transcription: "/bred/",
-//         audioUrl: undefined,
-//         topicId: "v3",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w12",
-//         word: "water",
-//         translation: "вода",
-//         transcription: "/ˈwɔːtər/",
-//         audioUrl: undefined,
-//         topicId: "v3",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w13",
-//         word: "coffee",
-//         translation: "кава",
-//         transcription: "/ˈkɒfi/",
-//         audioUrl: undefined,
-//         topicId: "v3",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w14",
-//         word: "apple",
-//         translation: "яблуко",
-//         transcription: "/ˈæpl/",
-//         audioUrl: undefined,
-//         topicId: "v3",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w15",
-//         word: "cheese",
-//         translation: "сир",
-//         transcription: "/tʃiːz/",
-//         audioUrl: undefined,
-//         topicId: "v3",
-//         isKnown: false,
-//       },
-//     ],
-//     v4: [
-//       {
-//         id: "w16",
-//         word: "airport",
-//         translation: "аеропорт",
-//         transcription: "/ˈeəpɔːrt/",
-//         audioUrl: undefined,
-//         topicId: "v4",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w17",
-//         word: "hotel",
-//         translation: "готель",
-//         transcription: "/həʊˈtel/",
-//         audioUrl: undefined,
-//         topicId: "v4",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w18",
-//         word: "ticket",
-//         translation: "квиток",
-//         transcription: "/ˈtɪkɪt/",
-//         audioUrl: undefined,
-//         topicId: "v4",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w19",
-//         word: "passport",
-//         translation: "паспорт",
-//         transcription: "/ˈpɑːspɔːrt/",
-//         audioUrl: undefined,
-//         topicId: "v4",
-//         isKnown: false,
-//       },
-//       {
-//         id: "w20",
-//         word: "luggage",
-//         translation: "багаж",
-//         transcription: "/ˈlʌɡɪdʒ/",
-//         audioUrl: undefined,
-//         topicId: "v4",
-//         isKnown: false,
-//       },
-//     ],
-//   };
+// private mockWords: { [topicId: string]: Word[] } = {
+//   v1: [
+//     {
+//       id: "w1",
+//       word: "hello",
+//       translation: "привіт",
+//       transcription: "/həˈloʊ/",
+//       audioUrl: undefined,
+//       topicId: "v1",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w2",
+//       word: "goodbye",
+//       translation: "до побачення",
+//       transcription: "/ɡʊdˈbaɪ/",
+//       audioUrl: undefined,
+//       topicId: "v1",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w3",
+//       word: "please",
+//       translation: "будь ласка",
+//       transcription: "/pliːz/",
+//       audioUrl: undefined,
+//       topicId: "v1",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w4",
+//       word: "thank you",
+//       translation: "дякую",
+//       transcription: "/θæŋk juː/",
+//       audioUrl: undefined,
+//       topicId: "v1",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w5",
+//       word: "sorry",
+//       translation: "вибачте",
+//       transcription: "/ˈsɒri/",
+//       audioUrl: undefined,
+//       topicId: "v1",
+//       isKnown: false,
+//     },
+//   ],
+//   v2: [
+//     {
+//       id: "w6",
+//       word: "teacher",
+//       translation: "вчитель",
+//       transcription: "/ˈtiːtʃər/",
+//       audioUrl: undefined,
+//       topicId: "v2",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w7",
+//       word: "doctor",
+//       translation: "лікар",
+//       transcription: "/ˈdɒktər/",
+//       audioUrl: undefined,
+//       topicId: "v2",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w8",
+//       word: "engineer",
+//       translation: "інженер",
+//       transcription: "/ˌendʒɪˈnɪər/",
+//       audioUrl: undefined,
+//       topicId: "v2",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w9",
+//       word: "lawyer",
+//       translation: "юрист",
+//       transcription: "/ˈlɔːjər/",
+//       audioUrl: undefined,
+//       topicId: "v2",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w10",
+//       word: "manager",
+//       translation: "менеджер",
+//       transcription: "/ˈmænɪdʒər/",
+//       audioUrl: undefined,
+//       topicId: "v2",
+//       isKnown: false,
+//     },
+//   ],
+//   v3: [
+//     {
+//       id: "w11",
+//       word: "bread",
+//       translation: "хліб",
+//       transcription: "/bred/",
+//       audioUrl: undefined,
+//       topicId: "v3",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w12",
+//       word: "water",
+//       translation: "вода",
+//       transcription: "/ˈwɔːtər/",
+//       audioUrl: undefined,
+//       topicId: "v3",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w13",
+//       word: "coffee",
+//       translation: "кава",
+//       transcription: "/ˈkɒfi/",
+//       audioUrl: undefined,
+//       topicId: "v3",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w14",
+//       word: "apple",
+//       translation: "яблуко",
+//       transcription: "/ˈæpl/",
+//       audioUrl: undefined,
+//       topicId: "v3",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w15",
+//       word: "cheese",
+//       translation: "сир",
+//       transcription: "/tʃiːz/",
+//       audioUrl: undefined,
+//       topicId: "v3",
+//       isKnown: false,
+//     },
+//   ],
+//   v4: [
+//     {
+//       id: "w16",
+//       word: "airport",
+//       translation: "аеропорт",
+//       transcription: "/ˈeəpɔːrt/",
+//       audioUrl: undefined,
+//       topicId: "v4",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w17",
+//       word: "hotel",
+//       translation: "готель",
+//       transcription: "/həʊˈtel/",
+//       audioUrl: undefined,
+//       topicId: "v4",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w18",
+//       word: "ticket",
+//       translation: "квиток",
+//       transcription: "/ˈtɪkɪt/",
+//       audioUrl: undefined,
+//       topicId: "v4",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w19",
+//       word: "passport",
+//       translation: "паспорт",
+//       transcription: "/ˈpɑːspɔːrt/",
+//       audioUrl: undefined,
+//       topicId: "v4",
+//       isKnown: false,
+//     },
+//     {
+//       id: "w20",
+//       word: "luggage",
+//       translation: "багаж",
+//       transcription: "/ˈlʌɡɪdʒ/",
+//       audioUrl: undefined,
+//       topicId: "v4",
+//       isKnown: false,
+//     },
+//   ],
+// };
 
 //   // Phrases mock data
 //   private mockPhrasesTopics: Topic[] = [

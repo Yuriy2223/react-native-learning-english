@@ -1,31 +1,31 @@
+import { Topic, Word } from "@/types/vocabulary.type";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Topic, Word } from "../../types";
 import {
   fetchTopicWords,
   fetchVocabularyTopics,
   markWordAsKnown,
 } from "./operations";
 
-interface VocabularyState {
+export interface VocabularyState {
   topics: Topic[];
-  currentTopic: Topic | null;
+  currentTopic?: Topic;
   currentWords: Word[];
   currentWordIndex: number;
   searchQuery: string;
   filteredTopics: Topic[];
   isLoading: boolean;
-  isError: string | null;
+  isError?: string;
 }
 
 const initialState: VocabularyState = {
   topics: [],
-  currentTopic: null,
+  currentTopic: undefined,
   currentWords: [],
   currentWordIndex: 0,
   searchQuery: "",
   filteredTopics: [],
   isLoading: false,
-  isError: null,
+  isError: undefined,
 };
 
 const vocabularySlice = createSlice({
@@ -92,53 +92,60 @@ const vocabularySlice = createSlice({
     },
 
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchVocabularyTopics.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchVocabularyTopics.fulfilled, (state, action) => {
         state.isLoading = false;
         state.topics = action.payload;
         state.filteredTopics = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchVocabularyTopics.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
       .addCase(fetchTopicWords.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicWords.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentWords = action.payload;
         state.currentWordIndex = 0;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicWords.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
+      .addCase(markWordAsKnown.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
       .addCase(markWordAsKnown.fulfilled, (state, action) => {
+        state.isLoading = false;
         const word = state.currentWords.find(
           (w) => w.id === action.payload.wordId
         );
         if (word) {
           word.isKnown = action.payload.isKnown;
         }
+        state.isError = undefined;
       })
       .addCase(markWordAsKnown.rejected, (state, action) => {
-        state.isError = action.payload as string;
+        state.isLoading = false;
+        state.isError = action.payload;
       });
   },
 });

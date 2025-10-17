@@ -1,18 +1,17 @@
+import { AppSettings, DEFAULT_SETTINGS } from "@/types/settings.type";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { DEFAULT_SETTINGS } from "../../constants";
-import { AppSettings } from "../../types";
 import { loadSettings, saveSettings } from "./operations";
 
 interface SettingsState {
   settings: AppSettings;
   isLoading: boolean;
-  isError: string | null;
+  isError?: string;
 }
 
 const initialState: SettingsState = {
   settings: DEFAULT_SETTINGS,
   isLoading: false,
-  isError: null,
+  isError: undefined,
 };
 
 const settingsSlice = createSlice({
@@ -49,19 +48,19 @@ const settingsSlice = createSlice({
     },
 
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loadSettings.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(loadSettings.fulfilled, (state, action) => {
         state.isLoading = false;
         state.settings = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(loadSettings.rejected, (state, action) => {
         state.isLoading = false;
@@ -71,12 +70,12 @@ const settingsSlice = createSlice({
     builder
       .addCase(saveSettings.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(saveSettings.fulfilled, (state, action) => {
         state.isLoading = false;
         state.settings = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(saveSettings.rejected, (state, action) => {
         state.isLoading = false;

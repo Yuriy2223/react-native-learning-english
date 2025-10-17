@@ -1,31 +1,31 @@
+import { GrammarRule, Topic } from "@/types/grammar.type";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GrammarRule, Topic } from "../../types";
 import {
   fetchGrammarTopics,
   fetchTopicRules,
   markTopicAsCompleted,
 } from "./operations";
 
-interface GrammarState {
+export interface GrammarState {
   topics: Topic[];
-  currentTopic: Topic | null;
+  currentTopic?: Topic;
   currentRules: GrammarRule[];
   searchQuery: string;
   filteredTopics: Topic[];
   groupedTopics: Record<string, Topic[]>;
   isLoading: boolean;
-  isError: string | null;
+  isError?: string;
 }
 
 const initialState: GrammarState = {
   topics: [],
-  currentTopic: null,
+  currentTopic: undefined,
   currentRules: [],
   searchQuery: "",
   filteredTopics: [],
   groupedTopics: {},
   isLoading: false,
-  isError: null,
+  isError: undefined,
 };
 
 const grammarSlice = createSlice({
@@ -95,20 +95,20 @@ const grammarSlice = createSlice({
     },
 
     clearError: (state) => {
-      state.isError = null;
+      state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchGrammarTopics.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchGrammarTopics.fulfilled, (state, action) => {
         state.isLoading = false;
         state.topics = action.payload;
         state.filteredTopics = action.payload;
-        state.isError = null;
+        state.isError = undefined;
 
         state.groupedTopics = action.payload.reduce((acc, topic) => {
           if (!acc[topic.difficulty]) {
@@ -120,26 +120,31 @@ const grammarSlice = createSlice({
       })
       .addCase(fetchGrammarTopics.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
       .addCase(fetchTopicRules.pending, (state) => {
         state.isLoading = true;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicRules.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentRules = action.payload;
-        state.isError = null;
+        state.isError = undefined;
       })
       .addCase(fetchTopicRules.rejected, (state, action) => {
         state.isLoading = false;
-        state.isError = action.payload as string;
+        state.isError = action.payload;
       });
 
     builder
+      .addCase(markTopicAsCompleted.pending, (state) => {
+        state.isLoading = true;
+        state.isError = undefined;
+      })
       .addCase(markTopicAsCompleted.fulfilled, (state, action) => {
+        state.isLoading = false;
         const topicId = action.payload;
         const topic = state.topics.find((t) => t.id === topicId);
         if (topic) {
@@ -161,9 +166,11 @@ const grammarSlice = createSlice({
             groupedTopic.completedItems = groupedTopic.totalItems;
           }
         });
+        state.isError = undefined;
       })
       .addCase(markTopicAsCompleted.rejected, (state, action) => {
-        state.isError = action.payload as string;
+        state.isLoading = false;
+        state.isError = action.payload;
       });
   },
 });

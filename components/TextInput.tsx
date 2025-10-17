@@ -1,4 +1,3 @@
-// components/TextInput.tsx
 import React, { forwardRef } from "react";
 import {
   TextInput as RNTextInput,
@@ -26,7 +25,7 @@ export const TextInput = forwardRef<RNTextInput, TextInputProps>(
       {
         backgroundColor: colors.surface,
         borderColor: error ? colors.error : colors.border,
-        color: colors.text,
+        color: colors.textPrimary,
       },
       style,
     ];
@@ -36,7 +35,9 @@ export const TextInput = forwardRef<RNTextInput, TextInputProps>(
     return (
       <View style={styles.container}>
         {label && (
-          <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>
+            {label}
+          </Text>
         )}
 
         <View style={styles.inputContainer}>
