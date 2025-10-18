@@ -11,9 +11,7 @@ export const navigate = (path: string, params?: Record<string, any>) => {
 };
 
 export const replace = (path: string) => router.replace(path as any);
-
 export const goBack = () => router.back();
-
 export const canGoBack = () => router.canGoBack();
 
 export function calculateProgress(topic: Topic): number {
@@ -22,6 +20,14 @@ export function calculateProgress(topic: Topic): number {
 
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
+}
+
+export function calculateProgressFromNumbers(
+  current: number,
+  max: number
+): number {
+  if (max === 0) return 0;
+  return Math.round((current / max) * 100);
 }
 
 export function getTopicIcon(topic: Topic): keyof typeof Ionicons.glyphMap {
@@ -70,5 +76,65 @@ export const getDifficultyLabel = (difficulty: string) => {
       return "Складний";
     default:
       return "";
+  }
+};
+
+export const getAchievementTypeColor = (type: string, colors: any) => {
+  switch (type) {
+    case "bronze":
+      return "#CD7F32";
+    case "silver":
+      return "#C0C0C0";
+    case "gold":
+      return "#FFD700";
+    case "diamond":
+      return "#B9F2FF";
+    default:
+      return colors.textSecondary;
+  }
+};
+
+export const getAchievementTypeIcon = (type: string) => {
+  switch (type) {
+    case "bronze":
+      return "medal";
+    case "silver":
+      return "medal";
+    case "gold":
+      return "trophy";
+    case "diamond":
+      return "diamond";
+    default:
+      return "ribbon";
+  }
+};
+
+export const getExerciseTypeIcon = (type: string) => {
+  switch (type) {
+    case "multiple_choice":
+      return "radio-button-on";
+    case "fill_blank":
+      return "create";
+    case "drag_drop":
+      return "move";
+    case "audio":
+      return "volume-high";
+    default:
+      return "help-circle";
+  }
+};
+
+export const getExerciseTypeLabel = (type: string) => {
+  switch (type) {
+    case "multiple_choice":
+      return "Множинний вибір";
+    case "fill_blank":
+      return "Заповнити пропуск";
+    case "drag_drop":
+      return "Перетягування";
+    case "audio":
+      return "Аудіо вправа";
+    default:
+      return "Вправа";
   }
 };
