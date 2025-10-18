@@ -81,9 +81,9 @@ function RootLayoutContent() {
         <Stack.Screen name="vocabulary-card" />
         <Stack.Screen name="phrases-topic" />
         <Stack.Screen name="phrases-card" />
-        {/* <Stack.Screen name="grammar-topic" />
-        <Stack.Screen name="exercises" /> */}
-        {/* <Stack.Screen name="achievements" /> */}
+        <Stack.Screen name="grammar-topic" />
+        <Stack.Screen name="exercises" />
+        <Stack.Screen name="achievements" />
       </Stack>
 
       <Toast />
