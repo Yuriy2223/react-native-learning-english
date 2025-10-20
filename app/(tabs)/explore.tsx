@@ -7,9 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { SIZES } from "../../../constants";
-import { useTheme } from "../../../hooks/useTheme";
+import { SIZES } from "../../constants";
+import { useTheme } from "../../hooks/useTheme";
 
 interface Module {
   id: string;
@@ -95,18 +94,23 @@ export default function ExploreScreen() {
               onPress={() => handleModulePress(module.route)}
               activeOpacity={0.7}
             >
-              <View
-                style={[
-                  styles.iconContainer,
-                  { backgroundColor: module.color + "15" },
-                ]}
-              >
-                <Ionicons name={module.icon} size={32} color={module.color} />
-              </View>
+              <View style={styles.cardContent}>
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: module.color + "15" },
+                  ]}
+                >
+                  <Ionicons name={module.icon} size={32} color={module.color} />
+                </View>
 
-              <Text style={[styles.moduleTitle, { color: colors.textPrimary }]}>
-                {module.title}
-              </Text>
+                <Text
+                  style={[styles.moduleTitle, { color: colors.textPrimary }]}
+                  numberOfLines={2}
+                >
+                  {module.title}
+                </Text>
+              </View>
 
               <View style={styles.arrowContainer}>
                 <Ionicons
@@ -131,14 +135,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.spacing.lg,
     paddingTop: SIZES.spacing.xl,
     paddingBottom: SIZES.spacing.lg,
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: SIZES.fontSize.xxl,
     fontWeight: "bold",
     marginBottom: SIZES.spacing.xs,
+    textAlign: "center",
   },
   headerSubtitle: {
     fontSize: SIZES.fontSize.md,
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,
@@ -157,7 +164,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: SIZES.borderRadius.lg,
     padding: SIZES.spacing.lg,
-    justifyContent: "space-between",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -167,20 +173,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  cardContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SIZES.spacing.xs,
+    marginBottom: SIZES.spacing.xl,
+  },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: SIZES.borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: SIZES.spacing.sm,
+    marginBottom: SIZES.spacing.md,
   },
   moduleTitle: {
-    fontSize: SIZES.fontSize.lg,
+    fontSize: SIZES.fontSize.md,
     fontWeight: "600",
-    marginBottom: SIZES.spacing.xs,
+    textAlign: "center",
   },
   arrowContainer: {
-    alignSelf: "flex-end",
+    position: "absolute",
+    bottom: SIZES.spacing.md,
+    right: SIZES.spacing.md,
   },
 });

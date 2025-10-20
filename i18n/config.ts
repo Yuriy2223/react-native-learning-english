@@ -2,8 +2,8 @@
 // import i18n from "i18next";
 // import resourcesToBackend from "i18next-resources-to-backend";
 // import { initReactI18next } from "react-i18next";
-// import { STORAGE_KEYS } from "../constants";
-// import { storage } from "../utils";
+// // import { STORAGE_KEYS } from "../constants";
+// // import { storage } from "../utils";
 
 // i18n
 //   .use(
@@ -31,7 +31,7 @@
 
 // const loadLanguagePreference = async () => {
 //   try {
-//     const settings = await storage.getItem(STORAGE_KEYS.APP_SETTINGS);
+//     const settings = await storage.getItem(//STORAGE_KEYS.APP_SETTINGS);
 //     if (settings?.language) {
 //       await i18n.changeLanguage(settings.language);
 //     }

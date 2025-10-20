@@ -13,13 +13,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { TextInput } from "../components/TextInput";
-import { VocabularyTopicsCard } from "../components/VocabularyTopicsCard";
-import { SIZES } from "../constants";
-import { useTheme } from "../hooks/useTheme";
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { fetchVocabularyTopics } from "../redux/vocabulary/operations";
-import { setSearchQuery } from "../redux/vocabulary/slice";
+import { TextInput } from "../../components/TextInput";
+import { VocabularyTopicsCard } from "../../components/VocabularyTopicsCard";
+import { SIZES } from "../../constants";
+import { useTheme } from "../../hooks/useTheme";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { fetchVocabularyTopics } from "../../redux/vocabulary/operations";
+import { setSearchQuery } from "../../redux/vocabulary/slice";
 
 export default function VocabularyTopicsScreen() {
   const { colors } = useTheme();

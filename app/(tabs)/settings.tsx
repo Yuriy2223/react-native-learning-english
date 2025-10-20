@@ -12,18 +12,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button } from "../components/Button";
-import { SIZES } from "../constants";
-import { useTheme } from "../hooks/useTheme";
-import { useTranslation } from "../hooks/useTranslation";
-import { saveSettings } from "../redux/settings/operations";
+import { Button } from "../../components/Button";
+import { SIZES } from "../../constants";
+import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../hooks/useTranslation";
+import { saveSettings } from "../../redux/settings/operations";
 import {
   resetSettings,
   toggleNotifications,
   toggleOfflineMode,
   toggleSound,
-} from "../redux/settings/slice";
-import { useAppDispatch, useAppSelector } from "../redux/store";
+} from "../../redux/settings/slice";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
 
 export default function SettingsScreen() {
   const [showResetModal, setShowResetModal] = useState(false);

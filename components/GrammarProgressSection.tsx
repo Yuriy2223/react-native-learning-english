@@ -12,7 +12,8 @@ interface ProgressSectionProps {
 export function GrammarProgressSection({ topic }: ProgressSectionProps) {
   const { colors } = useTheme();
   const progressPercent = calculateProgress(topic);
-  const isCompleted = topic.completedItems === topic.totalItems;
+  const hasRules = topic.totalItems > 0;
+  const isCompleted = hasRules && topic.completedItems === topic.totalItems;
 
   return (
     <View
@@ -48,7 +49,23 @@ export function GrammarProgressSection({ topic }: ProgressSectionProps) {
         />
       </View>
 
-      {isCompleted && (
+      {!hasRules ? (
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: colors.textSecondary + "20" },
+          ]}
+        >
+          <Ionicons
+            name="information-circle"
+            size={20}
+            color={colors.textSecondary}
+          />
+          <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+            Правила ще не додані
+          </Text>
+        </View>
+      ) : isCompleted ? (
         <View
           style={[
             styles.completedBadge,
@@ -60,7 +77,7 @@ export function GrammarProgressSection({ topic }: ProgressSectionProps) {
             Тема завершена!
           </Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -109,10 +126,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.spacing.md,
     paddingVertical: SIZES.spacing.sm,
     borderRadius: SIZES.borderRadius.md,
+    gap: SIZES.spacing.xs,
   },
   completedText: {
     fontSize: SIZES.fontSize.sm,
     fontWeight: "600",
-    marginLeft: SIZES.spacing.xs,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    paddingHorizontal: SIZES.spacing.md,
+    paddingVertical: SIZES.spacing.sm,
+    borderRadius: SIZES.borderRadius.md,
+    gap: SIZES.spacing.xs,
+  },
+  statusText: {
+    fontSize: SIZES.fontSize.sm,
+    fontWeight: "600",
   },
 });
