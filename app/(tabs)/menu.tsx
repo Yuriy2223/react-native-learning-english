@@ -1,25 +1,25 @@
-import { navigate } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import {
   Alert,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SIZES } from "../constants";
-import { showToast } from "../hooks/showToast";
-import { useTheme } from "../hooks/useTheme";
-import { logoutUser } from "../redux/auth/operations";
-import { updateTheme } from "../redux/settings/slice";
-import { useAppDispatch, useAppSelector } from "../redux/store";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { SIZES } from "../../constants";
+import { showToast } from "../../hooks/showToast";
+import { useTheme } from "../../hooks/useTheme";
+import { logoutUser } from "../../redux/auth/operations";
+import { updateTheme } from "../../redux/settings/slice";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { navigate } from "../../utils";
 
-export function DrawerContent(props: any) {
+export default function MenuScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
-
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
@@ -65,38 +65,25 @@ export function DrawerContent(props: any) {
       id: "profile",
       title: "Профіль",
       icon: "person-outline",
-      onPress: () => {
-        props.navigation.closeDrawer();
-        // router.push("/profile");
-        navigate("/profile");
-      },
+      onPress: () => navigate("/(tabs)/profile"),
     },
     {
       id: "achievements",
       title: "Досягнення",
       icon: "trophy-outline",
-      onPress: () => {
-        props.navigation.closeDrawer();
-        // router.push("/achievements");
-        navigate("/achievements");
-      },
+      onPress: () => navigate("/achievements"),
     },
     {
       id: "settings",
       title: "Налаштування",
       icon: "settings-outline",
-      onPress: () => {
-        props.navigation.closeDrawer();
-        // router.push("/settings");
-        navigate("/settings");
-      },
+      onPress: () => navigate("/(tabs)/settings"),
     },
     {
       id: "support",
       title: "Підтримка",
       icon: "help-circle-outline",
       onPress: () => {
-        props.navigation.closeDrawer();
         showToast.success({
           message: "Розділ підтримки буде доступний незабаром",
         });
@@ -107,7 +94,6 @@ export function DrawerContent(props: any) {
       title: "Про застосунок",
       icon: "information-circle-outline",
       onPress: () => {
-        props.navigation.closeDrawer();
         showToast.success({
           message: "English Learning App v1.0.0",
         });
@@ -116,10 +102,18 @@ export function DrawerContent(props: any) {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <DrawerContentScrollView
-        {...props}
-        contentContainerStyle={styles.scrollContent}
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          Меню
+        </Text>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
         <View
@@ -152,26 +146,24 @@ export function DrawerContent(props: any) {
         <View
           style={[styles.themeSection, { backgroundColor: colors.surface }]}
         >
-          <View style={styles.themeRow}>
-            <Ionicons
-              name={isDark ? "moon" : "sunny"}
-              size={24}
-              color={colors.textPrimary}
-            />
-            <Text style={[styles.themeText, { color: colors.textPrimary }]}>
-              {isDark ? "Темна тема" : "Світла тема"}
-            </Text>
-            <Switch
-              value={isDark}
-              onValueChange={handleThemeToggle}
-              trackColor={{
-                false: colors.border,
-                true: colors.primary + "80",
-              }}
-              thumbColor={isDark ? colors.primary : colors.surface}
-              ios_backgroundColor={colors.border}
-            />
-          </View>
+          <Ionicons
+            name={isDark ? "moon" : "sunny"}
+            size={24}
+            color={colors.textPrimary}
+          />
+          <Text style={[styles.themeText, { color: colors.textPrimary }]}>
+            {isDark ? "Темна тема" : "Світла тема"}
+          </Text>
+          <Switch
+            value={isDark}
+            onValueChange={handleThemeToggle}
+            trackColor={{
+              false: colors.border,
+              true: colors.primary + "80",
+            }}
+            thumbColor={isDark ? colors.primary : colors.surface}
+            ios_backgroundColor={colors.border}
+          />
         </View>
 
         <View style={styles.menuSection}>
@@ -186,7 +178,6 @@ export function DrawerContent(props: any) {
                 name={item.icon as any}
                 size={24}
                 color={colors.textPrimary}
-                style={styles.menuIcon}
               />
               <Text style={[styles.menuText, { color: colors.textPrimary }]}>
                 {item.title}
@@ -199,9 +190,7 @@ export function DrawerContent(props: any) {
             </TouchableOpacity>
           ))}
         </View>
-      </DrawerContentScrollView>
 
-      <View style={[styles.logoutSection, { borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={[
             styles.logoutButton,
@@ -210,18 +199,13 @@ export function DrawerContent(props: any) {
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name="log-out-outline"
-            size={24}
-            color={colors.error}
-            style={styles.logoutIcon}
-          />
+          <Ionicons name="log-out-outline" size={24} color={colors.error} />
           <Text style={[styles.logoutText, { color: colors.error }]}>
             Вихід з акаунту
           </Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -229,16 +213,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SIZES.spacing.md,
+    paddingVertical: SIZES.spacing.md,
+  },
+  headerTitle: {
+    fontSize: 30,
+    fontWeight: "600",
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: SIZES.spacing.md,
   },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
     padding: SIZES.spacing.lg,
-    marginHorizontal: SIZES.spacing.md,
-    marginTop: SIZES.spacing.md,
-    marginBottom: SIZES.spacing.lg,
+    marginBottom: SIZES.spacing.md,
     borderRadius: SIZES.borderRadius.md,
   },
   avatarContainer: {
@@ -260,20 +254,17 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: SIZES.fontSize.md,
     fontWeight: "600",
-    marginBottom: SIZES.spacing.xs,
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: SIZES.fontSize.sm,
   },
   themeSection: {
-    marginHorizontal: SIZES.spacing.md,
-    marginBottom: SIZES.spacing.lg,
-    borderRadius: SIZES.borderRadius.md,
-    padding: SIZES.spacing.md,
-  },
-  themeRow: {
     flexDirection: "row",
     alignItems: "center",
+    padding: SIZES.spacing.md,
+    marginBottom: SIZES.spacing.md,
+    borderRadius: SIZES.borderRadius.md,
   },
   themeText: {
     flex: 1,
@@ -282,36 +273,29 @@ const styles = StyleSheet.create({
     marginLeft: SIZES.spacing.md,
   },
   menuSection: {
-    marginHorizontal: SIZES.spacing.md,
     gap: SIZES.spacing.xs,
+    marginBottom: SIZES.spacing.md,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: SIZES.spacing.md,
     borderRadius: SIZES.borderRadius.md,
-    marginBottom: SIZES.spacing.xs,
-  },
-  menuIcon: {
-    marginRight: SIZES.spacing.md,
+    gap: SIZES.spacing.md,
   },
   menuText: {
     flex: 1,
     fontSize: SIZES.fontSize.md,
     fontWeight: "500",
   },
-  logoutSection: {
-    padding: SIZES.spacing.md,
-    borderTopWidth: 1,
-  },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     padding: SIZES.spacing.md,
     borderRadius: SIZES.borderRadius.md,
-  },
-  logoutIcon: {
-    marginRight: SIZES.spacing.md,
+    gap: SIZES.spacing.md,
+    marginBottom: SIZES.spacing.xl,
   },
   logoutText: {
     fontSize: SIZES.fontSize.md,

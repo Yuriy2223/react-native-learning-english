@@ -4,6 +4,7 @@ export interface GrammarRule {
   description: string;
   examples: string[];
   topicId: string;
+  isCompleted?: boolean;
 }
 
 export interface Topic {
@@ -14,4 +15,24 @@ export interface Topic {
   totalItems: number;
   completedItems: number;
   difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+export interface GrammarQuestion {
+  id: string;
+  question: string;
+  options: string[];
+}
+
+export interface TestResult {
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  passed: boolean;
+  correctAnswers: {
+    questionId: string;
+    correctAnswer: number;
+    userAnswer: number;
+    isCorrect: boolean;
+    explanation?: string;
+  }[];
 }

@@ -21,7 +21,7 @@ export function GrammarStats({ topics }: GrammarStatsProps) {
   ).length;
 
   const completedTopics = topics.filter(
-    (topic) => topic.completedItems === topic.totalItems
+    (topic) => topic.totalItems > 0 && topic.completedItems === topic.totalItems
   ).length;
 
   return (

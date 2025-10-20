@@ -17,13 +17,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SIZES } from "../constants";
-import { showToast } from "../hooks/showToast";
-import { useTheme } from "../hooks/useTheme";
-import { fetchPhrasesTopics } from "../redux/phrases/operations";
-import { setSearchQuery } from "../redux/phrases/slice";
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { navigate } from "../utils";
+import { SIZES } from "../../constants";
+import { showToast } from "../../hooks/showToast";
+import { useTheme } from "../../hooks/useTheme";
+import { fetchPhrasesTopics } from "../../redux/phrases/operations";
+import { setSearchQuery } from "../../redux/phrases/slice";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { navigate } from "../../utils";
 
 export default function PhrasesTopicsScreen() {
   const { colors } = useTheme();

@@ -73,17 +73,17 @@ function RootLayoutContent() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(drawer)" />
-        <Stack.Screen name="reset-password" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="settings" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="vocabulary-topic" />
         <Stack.Screen name="vocabulary-card" />
         <Stack.Screen name="phrases-topic" />
         <Stack.Screen name="phrases-card" />
         <Stack.Screen name="grammar-topic" />
+        <Stack.Screen name="grammar-test" />
+        <Stack.Screen name="grammar-test-result" />
         <Stack.Screen name="exercises" />
         <Stack.Screen name="achievements" />
+        <Stack.Screen name="reset-password" />
       </Stack>
 
       <Toast />

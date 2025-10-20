@@ -9,6 +9,7 @@ interface RulesListProps {
   topic: Topic;
   isLoading: boolean;
   expandedRules: Set<string>;
+  completedRuleIds: Set<string>;
   onToggleExpansion: (ruleId: string) => void;
   onCompleteRule: (ruleId: string) => void;
 }
@@ -18,6 +19,7 @@ export function GrammarRulesList({
   topic,
   isLoading,
   expandedRules,
+  completedRuleIds,
   onToggleExpansion,
   onCompleteRule,
 }: RulesListProps) {
@@ -42,6 +44,7 @@ export function GrammarRulesList({
           index={index}
           topic={topic}
           isExpanded={expandedRules.has(rule.id)}
+          isCompleted={completedRuleIds.has(rule.id)}
           onToggleExpansion={() => onToggleExpansion(rule.id)}
           onCompleteRule={() => onCompleteRule(rule.id)}
         />

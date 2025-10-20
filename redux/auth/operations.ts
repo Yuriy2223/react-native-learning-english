@@ -1,5 +1,6 @@
-import { showToast } from "@/hooks/showToast";
-import { apiService } from "@/services/api";
+import { showToast } from "../../hooks/showToast";
+import { apiService, STORAGE_KEYS } from "../../services/api";
+
 import {
   GoogleAuthResponse,
   SigninFormData,
@@ -10,6 +11,23 @@ import {
 import { User } from "@/types/user.types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+
+async function saveAuthData(
+  response: SigninResponse | GoogleAuthResponse
+): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
+  apiService.setAuthToken(response.accessToken);
+
+  if (response.refreshToken) {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.REFRESH_TOKEN,
+      response.refreshToken
+    );
+    apiService.setRefreshToken(response.refreshToken);
+  } else {
+    console.warn("No refresh token in response, using only access token");
+  }
+}
 
 export const loginUser = createAsyncThunk<
   User,
@@ -26,9 +44,7 @@ export const loginUser = createAsyncThunk<
       body: JSON.stringify(data),
     });
 
-    await AsyncStorage.setItem("user_token", response.accessToken);
-    await AsyncStorage.setItem("user_data", JSON.stringify(response.user));
-    apiService.setAuthToken(response.accessToken);
+    await saveAuthData(response);
 
     showToast.success({ message: "Успішний вхід в систему!" });
     return response.user;
@@ -82,7 +98,6 @@ export const registerUser = createAsyncThunk<
   } catch (error: unknown) {
     if (error instanceof Error) {
       showToast.error({ message: error.message || "Помилка реєстрації" });
-
       return rejectWithValue(error.message || "Помилка реєстрації");
     }
     showToast.error({ message: "Помилка реєстрації" });
@@ -94,33 +109,30 @@ export const checkAuthStatus = createAsyncThunk<User | undefined>(
   "auth/checkAuthStatus",
   async () => {
     try {
-      const token = await AsyncStorage.getItem("user_token");
+      const [accessToken, refreshToken] = await AsyncStorage.multiGet([
+        STORAGE_KEYS.ACCESS_TOKEN,
+        STORAGE_KEYS.REFRESH_TOKEN,
+      ]);
+
+      const token = accessToken[1];
+      const refresh = refreshToken[1];
 
       if (!token) {
         return undefined;
       }
 
       apiService.setAuthToken(token);
-      const userData = await apiService.request<User>("/users/me");
-
-      try {
-        await AsyncStorage.setItem("user_data", JSON.stringify(userData));
-      } catch (storageError) {
-        console.error("Failed to save user data:", storageError);
+      if (refresh) {
+        apiService.setRefreshToken(refresh);
       }
+
+      const userData = await apiService.request<User>("/users/me");
 
       return userData;
     } catch (error: unknown) {
       console.error("Auth check failed:", error);
 
-      try {
-        await AsyncStorage.removeItem("user_token");
-        await AsyncStorage.removeItem("user_data");
-      } catch (storageError) {
-        console.error("Failed to clear storage:", storageError);
-      }
-
-      apiService.clearAuthToken();
+      await apiService.logout();
 
       return undefined;
     }
@@ -149,7 +161,6 @@ export const forgotPassword = createAsyncThunk<
       showToast.error({
         message: error.message || "Помилка відправки листа",
       });
-
       return rejectWithValue(error.message || "Помилка відправки листа");
     }
     showToast.error({ message: "Помилка відправки листа" });
@@ -164,17 +175,10 @@ export const logoutUser = createAsyncThunk<void, void, { rejectValue: string }>(
       try {
         await apiService.request("/auth/logout", { method: "POST" });
       } catch (apiError) {
-        console.error("Logout API call failed:", apiError);
+        console.warn("Logout API call failed:", apiError);
       }
 
-      try {
-        await AsyncStorage.removeItem("user_token");
-        await AsyncStorage.removeItem("user_data");
-      } catch (storageError) {
-        console.error("Failed to clear storage:", storageError);
-      }
-
-      apiService.clearAuthToken();
+      await apiService.logout();
 
       showToast.success({ message: "Ви успішно вийшли з системи" });
     } catch (error: unknown) {
@@ -202,14 +206,8 @@ export const googleLogin = createAsyncThunk<
       }
     );
 
-    try {
-      await AsyncStorage.setItem("user_token", response.accessToken);
-      await AsyncStorage.setItem("user_data", JSON.stringify(response.user));
-    } catch (storageError) {
-      console.error("Failed to save auth data:", storageError);
-    }
+    await saveAuthData(response);
 
-    apiService.setAuthToken(response.accessToken);
     showToast.success({ message: "Успішний вхід через Google!" });
     return response.user;
   } catch (error: unknown) {

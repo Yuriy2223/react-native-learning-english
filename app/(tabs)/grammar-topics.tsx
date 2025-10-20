@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { GrammarEmptyState } from "../components/GrammarEmptyState";
-import { GrammarSearchBar } from "../components/GrammarSearchBar";
-import { GrammarStats } from "../components/GrammarStats";
-import { GrammarTopicsList } from "../components/GrammarTopicsList";
-import { Spinner } from "../components/Spinner";
-import { SIZES } from "../constants";
-import { useTheme } from "../hooks/useTheme";
-import { fetchGrammarTopics } from "../redux/grammar/operations";
+import { GrammarEmptyState } from "../../components/GrammarEmptyState";
+import { GrammarSearchBar } from "../../components/GrammarSearchBar";
+import { GrammarStats } from "../../components/GrammarStats";
+import { GrammarTopicsList } from "../../components/GrammarTopicsList";
+import { Spinner } from "../../components/Spinner";
+import { SIZES } from "../../constants";
+import { useTheme } from "../../hooks/useTheme";
+import { fetchGrammarTopics } from "../../redux/grammar/operations";
 import {
   selectFilteredTopics,
   selectGroupedTopics,
   selectLoading,
   selectTopics,
-} from "../redux/grammar/selectors";
-import { setSearchQuery } from "../redux/grammar/slice";
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { Topic } from "../types/grammar.type";
-import { navigate } from "../utils";
+} from "../../redux/grammar/selectors";
+import { setSearchQuery } from "../../redux/grammar/slice";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { Topic } from "../../types/grammar.type";
+import { navigate } from "../../utils";
 
 export default function GrammarTopicsScreen() {
   const { colors } = useTheme();

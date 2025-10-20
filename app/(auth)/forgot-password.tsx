@@ -17,7 +17,6 @@ import { forgotPasswordSchema } from "../../validation";
 export default function ForgotPasswordScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-
   const [isLoading, setIsLoading] = useState(false);
 
   const {

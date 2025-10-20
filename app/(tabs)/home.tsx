@@ -4,15 +4,14 @@ import { useAppSelector } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { Button } from "../../../components/Button";
-import { SIZES } from "../../../constants";
-import { useTheme } from "../../../hooks/useTheme";
+import { Button } from "../../components/Button";
+import { SIZES } from "../../constants";
+import { useTheme } from "../../hooks/useTheme";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const user = useAppSelector(selectUser);
   const isLoading = useAppSelector(selectIsLoading);
-
   const handleGetStarted = () => {
     router.push("/explore");
   };

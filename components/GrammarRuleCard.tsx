@@ -11,6 +11,7 @@ interface RuleCardProps {
   index: number;
   topic: Topic;
   isExpanded: boolean;
+  isCompleted: boolean;
   onToggleExpansion: () => void;
   onCompleteRule: () => void;
 }
@@ -20,26 +21,45 @@ export function GrammarRuleCard({
   index,
   topic,
   isExpanded,
+  isCompleted,
   onToggleExpansion,
   onCompleteRule,
 }: RuleCardProps) {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.ruleCard, { backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.ruleCard,
+        { backgroundColor: colors.background },
+        isCompleted && styles.completedCard,
+      ]}
+    >
       <TouchableOpacity style={styles.ruleHeader} onPress={onToggleExpansion}>
         <View style={styles.ruleHeaderContent}>
           <View
             style={[
               styles.ruleNumber,
               {
-                backgroundColor: getDifficultyColor(topic.difficulty, colors),
+                backgroundColor: isCompleted
+                  ? colors.success
+                  : getDifficultyColor(topic.difficulty, colors),
               },
             ]}
           >
-            <Text style={styles.ruleNumberText}>{index + 1}</Text>
+            {isCompleted ? (
+              <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+            ) : (
+              <Text style={styles.ruleNumberText}>{index + 1}</Text>
+            )}
           </View>
-          <Text style={[styles.ruleTitle, { color: colors.textPrimary }]}>
+          <Text
+            style={[
+              styles.ruleTitle,
+              { color: colors.textPrimary },
+              isCompleted && styles.completedText,
+            ]}
+          >
             {rule.title}
           </Text>
         </View>
@@ -88,14 +108,35 @@ export function GrammarRuleCard({
             </View>
           )}
 
-          <Button
-            title="Правило вивчено"
-            onPress={onCompleteRule}
-            variant="outline"
-            style={[styles.completeRuleButton, { borderColor: colors.success }]}
-            textStyle={{ color: colors.success }}
-            size="small"
-          />
+          {!isCompleted ? (
+            <Button
+              title="Правило вивчено"
+              onPress={onCompleteRule}
+              variant="outline"
+              style={[
+                styles.completeRuleButton,
+                { borderColor: colors.success },
+              ]}
+              textStyle={{ color: colors.success }}
+              size="small"
+            />
+          ) : (
+            <View
+              style={[
+                styles.completedBadge,
+                { backgroundColor: colors.success },
+              ]}
+            >
+              <Ionicons
+                name="checkmark-circle"
+                size={16}
+                color={colors.success}
+              />
+              <Text style={[styles.completedText, { color: colors.success }]}>
+                Вивчено
+              </Text>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -106,6 +147,9 @@ const styles = StyleSheet.create({
   ruleCard: {
     borderRadius: SIZES.borderRadius.md,
     overflow: "hidden",
+  },
+  completedCard: {
+    opacity: 0.7,
   },
   ruleHeader: {
     flexDirection: "row",
@@ -135,6 +179,10 @@ const styles = StyleSheet.create({
     fontSize: SIZES.fontSize.md,
     fontWeight: "600",
     flex: 1,
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    opacity: 0.6,
   },
   ruleContent: {
     padding: SIZES.spacing.md,
@@ -167,5 +215,14 @@ const styles = StyleSheet.create({
   },
   completeRuleButton: {
     alignSelf: "flex-start",
+  },
+  completedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingHorizontal: SIZES.spacing.md,
+    paddingVertical: SIZES.spacing.sm,
+    borderRadius: SIZES.borderRadius.md,
+    gap: SIZES.spacing.xs,
   },
 });

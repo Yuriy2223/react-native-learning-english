@@ -12,20 +12,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ProfileActions } from "../components/ProfileActions";
-import { ProfileForm } from "../components/ProfileForm";
-import { ProfileHeader } from "../components/ProfileHeader";
-import { ProfileStats } from "../components/ProfileStats";
-import { SIZES } from "../constants";
-import { showToast } from "../hooks/showToast";
-import { useTheme } from "../hooks/useTheme";
-import { selectUser } from "../redux/auth/selectors";
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { updateProfile } from "../redux/user/operations";
-import { selectUserProgress } from "../redux/user/selectors";
-import { cameraService } from "../services/camera";
-import { navigate } from "../utils";
-import { profileSchema } from "../validation";
+import { ProfileActions } from "../../components/ProfileActions";
+import { ProfileForm } from "../../components/ProfileForm";
+import { ProfileHeader } from "../../components/ProfileHeader";
+import { ProfileStats } from "../../components/ProfileStats";
+import { SIZES } from "../../constants";
+import { showToast } from "../../hooks/showToast";
+import { useTheme } from "../../hooks/useTheme";
+import { selectUser } from "../../redux/auth/selectors";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { updateProfile } from "../../redux/user/operations";
+import { selectUserProgress } from "../../redux/user/selectors";
+import { cameraService } from "../../services/camera";
+import { navigate } from "../../utils";
+import { profileSchema } from "../../validation";
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
