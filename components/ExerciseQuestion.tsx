@@ -1,8 +1,8 @@
+import { Exercise } from "@/types/exercises.types";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { SIZES } from "../constants";
 import { useTheme } from "../hooks/useTheme";
-import { Exercise } from "../types";
 import { getExerciseTypeIcon, getExerciseTypeLabel } from "../utils";
 
 interface ExerciseQuestionProps {

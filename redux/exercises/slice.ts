@@ -83,22 +83,7 @@ const exercisesSlice = createSlice({
           topic.totalScore
         );
       }
-
-      const filteredTopic = state.filteredTopics.find(
-        (t) => t.id === action.payload.topicId
-      );
-      if (filteredTopic) {
-        filteredTopic.completedItems = Math.min(
-          filteredTopic.completedItems + 1,
-          filteredTopic.totalItems
-        );
-        filteredTopic.earnedScore = Math.min(
-          filteredTopic.earnedScore + action.payload.earnedPoints,
-          filteredTopic.totalScore
-        );
-      }
     },
-
     clearError: (state) => {
       state.isError = undefined;
     },

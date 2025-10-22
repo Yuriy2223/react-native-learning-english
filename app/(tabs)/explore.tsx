@@ -45,7 +45,7 @@ const modules: Module[] = [
     title: "Вправи",
     icon: "fitness",
     color: "#FF9500",
-    route: "/exercises",
+    route: "/exercises-topics",
   },
   {
     id: "5",

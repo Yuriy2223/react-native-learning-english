@@ -63,6 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen name="vocabulary-topics" options={{ href: null }} />
       <Tabs.Screen name="phrases-topics" options={{ href: null }} />
       <Tabs.Screen name="grammar-topics" options={{ href: null }} />
+      <Tabs.Screen name="exercises-topics" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />

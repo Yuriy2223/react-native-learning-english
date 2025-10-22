@@ -81,7 +81,6 @@ function RootLayoutContent() {
         <Stack.Screen name="grammar-topic" />
         <Stack.Screen name="grammar-test" />
         <Stack.Screen name="grammar-test-result" />
-        <Stack.Screen name="exercises" />
         <Stack.Screen name="achievements" />
         <Stack.Screen name="reset-password" />
       </Stack>
