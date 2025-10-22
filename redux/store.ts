@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { authReducer } from "./auth/slice";
+import { exercisesReducer } from "./exercises/slice";
 import { grammarReducer } from "./grammar/slice";
 import { phrasesReducer } from "./phrases/slice";
 import { settingsReducer } from "./settings/slice";
@@ -15,6 +16,7 @@ export const store = configureStore({
     phrases: phrasesReducer,
     grammar: grammarReducer,
     settings: settingsReducer,
+    exercises: exercisesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
