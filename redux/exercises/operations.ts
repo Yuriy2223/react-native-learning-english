@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { showToast } from "../../hooks/showToast";
 import { apiService } from "../../services/api";
 import { Exercise, ExerciseTopic } from "../../types/exercises.types";
+import { checkAchievements } from "../achievements/operations";
 
 export const fetchExerciseTopics = createAsyncThunk<
   ExerciseTopic[],
@@ -60,13 +61,17 @@ export const submitExerciseAnswer = createAsyncThunk<
   "exercises/submitAnswer",
   async (
     { exerciseId, answer, isCorrect, earnedPoints },
-    { rejectWithValue }
+    { rejectWithValue, dispatch }
   ) => {
     try {
       await apiService.request(`/exercises/${exerciseId}/submit`, {
         method: "POST",
         body: JSON.stringify({ answer, isCorrect, earnedPoints }),
       });
+
+      if (isCorrect) {
+        dispatch(checkAchievements());
+      }
 
       return { exerciseId, isCorrect, earnedPoints };
     } catch (error: unknown) {

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { SIZES } from "../constants";
 import { useTheme } from "../hooks/useTheme";
-import { Achievement } from "../types";
+import type { Achievement } from "../types/achievements.types";
 import {
   calculateProgressFromNumbers,
   getAchievementTypeColor,
@@ -56,7 +56,7 @@ export function AchievementCard({
               <Text
                 style={[styles.progressText, { color: colors.textSecondary }]}
               >
-                Прогрес: {achievement.progress}/{achievement.maxProgress}
+                Прогрес: {achievement.progress}/{achievement.target}
               </Text>
               <Text
                 style={[
@@ -66,7 +66,7 @@ export function AchievementCard({
               >
                 {calculateProgressFromNumbers(
                   achievement.progress,
-                  achievement.maxProgress
+                  achievement.target
                 )}
                 %
               </Text>
@@ -85,7 +85,7 @@ export function AchievementCard({
                     ),
                     width: `${calculateProgressFromNumbers(
                       achievement.progress,
-                      achievement.maxProgress
+                      achievement.target
                     )}%`,
                   },
                 ]}

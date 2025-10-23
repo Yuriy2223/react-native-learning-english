@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { achievementsReducer } from "./achievements/slice";
 import { authReducer } from "./auth/slice";
 import { exercisesReducer } from "./exercises/slice";
 import { grammarReducer } from "./grammar/slice";
@@ -17,6 +18,7 @@ export const store = configureStore({
     grammar: grammarReducer,
     settings: settingsReducer,
     exercises: exercisesReducer,
+    achievements: achievementsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
