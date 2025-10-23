@@ -1,8 +1,8 @@
 import { showToast } from "@/hooks/showToast";
 import { apiService } from "@/services/api";
 import { Topic, Word } from "@/types/vocabulary.type";
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { checkAchievements } from "../achievements/operations";
 
 export const fetchVocabularyTopics = createAsyncThunk<
   Topic[],
@@ -52,7 +52,7 @@ export const markWordAsKnown = createAsyncThunk<
   { rejectValue: string }
 >(
   "vocabulary/markWordAsKnown",
-  async ({ wordId, isKnown }, { rejectWithValue }) => {
+  async ({ wordId, isKnown }, { rejectWithValue, dispatch }) => {
     try {
       await apiService.request(`/vocabulary/words/${wordId}/status`, {
         method: "PATCH",
@@ -65,6 +65,10 @@ export const markWordAsKnown = createAsyncThunk<
           : "Статус слова оновлено",
         duration: 2000,
       });
+
+      if (isKnown) {
+        dispatch(checkAchievements());
+      }
 
       return { wordId, isKnown };
     } catch (error: unknown) {

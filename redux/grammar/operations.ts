@@ -7,6 +7,7 @@ import {
   Topic,
 } from "@/types/grammar.type";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { checkAchievements } from "../achievements/operations";
 
 export const fetchGrammarTopics = createAsyncThunk<
   Topic[],
@@ -132,24 +133,32 @@ export const submitGrammarTest = createAsyncThunk<
   TestResult,
   { topicId: string; answers: number[] },
   { rejectValue: string }
->("grammar/submitTest", async ({ topicId, answers }, { rejectWithValue }) => {
-  try {
-    const response = await apiService.request<TestResult>(
-      `/grammar/topics/${topicId}/submit-test`,
-      {
-        method: "POST",
-        body: JSON.stringify({ answers }),
+>(
+  "grammar/submitTest",
+  async ({ topicId, answers }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await apiService.request<TestResult>(
+        `/grammar/topics/${topicId}/submit-test`,
+        {
+          method: "POST",
+          body: JSON.stringify({ answers }),
+        }
+      );
+
+      if (response.passed) {
+        dispatch(checkAchievements());
       }
-    );
-    return response;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      showToast.error({
-        message: error.message || "Помилка відправки тесту",
-      });
-      return rejectWithValue(error.message || "Помилка відправки тесту");
+
+      return response;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        showToast.error({
+          message: error.message || "Помилка відправки тесту",
+        });
+        return rejectWithValue(error.message || "Помилка відправки тесту");
+      }
+      showToast.error({ message: "Помилка відправки тесту" });
+      return rejectWithValue("Помилка відправки тесту");
     }
-    showToast.error({ message: "Помилка відправки тесту" });
-    return rejectWithValue("Помилка відправки тесту");
   }
-});
+);

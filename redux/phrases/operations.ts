@@ -2,6 +2,7 @@ import { showToast } from "@/hooks/showToast";
 import { apiService } from "@/services/api";
 import { Phrase, Topic } from "@/types/phrases.type";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { checkAchievements } from "../achievements/operations";
 
 export const fetchPhrasesTopics = createAsyncThunk<
   Topic[],
@@ -51,7 +52,7 @@ export const markPhraseAsKnown = createAsyncThunk<
   { rejectValue: string }
 >(
   "phrases/markPhraseAsKnown",
-  async ({ phraseId, isKnown }, { rejectWithValue }) => {
+  async ({ phraseId, isKnown }, { rejectWithValue, dispatch }) => {
     try {
       await apiService.request(`/phrases/${phraseId}/status`, {
         method: "PATCH",
@@ -64,6 +65,10 @@ export const markPhraseAsKnown = createAsyncThunk<
           : "Статус фрази оновлено",
         duration: 2000,
       });
+
+      if (isKnown) {
+        dispatch(checkAchievements());
+      }
 
       return { phraseId, isKnown };
     } catch (error: unknown) {

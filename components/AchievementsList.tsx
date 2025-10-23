@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SIZES } from "../constants";
 import { useTheme } from "../hooks/useTheme";
-import { Achievement } from "../types";
+import { Achievement } from "../types/achievements.types";
 import { AchievementCard } from "./AchievementCard";
 
 interface AchievementsListProps {
