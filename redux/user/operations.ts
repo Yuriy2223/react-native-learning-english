@@ -3,6 +3,7 @@ import { apiService } from "@/services/api";
 import { User, UserProgress } from "@/types/user.types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { fetchAchievements, fetchUserStats } from "../achievements/operations";
 
 export const fetchUserProgress = createAsyncThunk<
   UserProgress,
@@ -79,5 +80,74 @@ export const updateProfile = createAsyncThunk<
     }
     showToast.error({ message: "Помилка оновлення профілю" });
     return rejectWithValue("Помилка оновлення профілю");
+  }
+});
+
+export const updateStudyTime = createAsyncThunk<
+  number,
+  number,
+  { rejectValue: string }
+>("user/updateStudyTime", async (seconds: number, { rejectWithValue }) => {
+  try {
+    const response = await apiService.request<{
+      success: boolean;
+      totalStudySeconds: number;
+    }>("/users/study-time", {
+      method: "POST",
+      body: JSON.stringify({ seconds }),
+    });
+    return response.totalStudySeconds;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return rejectWithValue(error.message);
+    }
+    return rejectWithValue("Помилка оновлення часу навчання");
+  }
+});
+
+export const checkAndUpdateStreak = createAsyncThunk<
+  UserProgress,
+  void,
+  { rejectValue: string }
+>("user/checkAndUpdateStreak", async (_, { rejectWithValue }) => {
+  try {
+    const response = await apiService.request<UserProgress>("/users/progress");
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return rejectWithValue(error.message);
+    }
+    return rejectWithValue("Не вдалося оновити streak");
+  }
+});
+
+export const resetProgress = createAsyncThunk<
+  void,
+  void,
+  { rejectValue: string }
+>("user/resetProgress", async (_, { rejectWithValue, dispatch }) => {
+  try {
+    await apiService.request("/users/progress/reset", {
+      method: "DELETE",
+    });
+
+    await Promise.all([
+      dispatch(fetchAchievements()),
+      dispatch(fetchUserStats()),
+      dispatch(checkAndUpdateStreak()),
+    ]);
+
+    showToast.success({
+      message: "Весь прогрес успішно скинуто",
+      duration: 3000,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      showToast.error({
+        message: error.message || "Помилка скидання прогресу",
+      });
+      return rejectWithValue(error.message);
+    }
+    return rejectWithValue("Помилка скидання прогресу");
   }
 });

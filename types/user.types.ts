@@ -4,6 +4,7 @@ export interface User {
   name: string;
   avatar?: string;
   isEmailVerified?: boolean;
+  totalStudySeconds?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -21,4 +22,5 @@ export interface UserProgress {
   completedTopics: number;
   totalPoints: number;
   streak: number;
+  lastActiveAt?: string;
 }

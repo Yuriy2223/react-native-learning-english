@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import {
+  checkAchievements,
   fetchAchievements,
   fetchUserStats,
 } from "../redux/achievements/operations";
@@ -8,6 +9,7 @@ import {
   selectUserStats,
 } from "../redux/achievements/selectors";
 import { useAppDispatch, useAppSelector } from "../redux/store";
+import { checkAndUpdateStreak } from "@/redux/user/operations";
 
 export const useAchievements = () => {
   const dispatch = useAppDispatch();
@@ -17,6 +19,8 @@ export const useAchievements = () => {
   useEffect(() => {
     dispatch(fetchAchievements());
     dispatch(fetchUserStats());
+    dispatch(checkAndUpdateStreak());
+    dispatch(checkAchievements());
   }, [dispatch]);
 
   const unlockedAchievements = achievements.filter((a) => a.isUnlocked);

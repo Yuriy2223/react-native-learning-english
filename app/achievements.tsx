@@ -13,12 +13,13 @@ import { AchievementsList } from "../components/AchievementsList";
 import { Button } from "../components/Button";
 import { ConfirmationModal } from "../components/ConfirmationModal";
 import { SIZES } from "../constants";
-import { showToast } from "../hooks/showToast";
 import { useAchievements } from "../hooks/useAchievements";
 import { useTheme } from "../hooks/useTheme";
-import { useAppSelector } from "../redux/store";
+import { useAppDispatch, useAppSelector } from "../redux/store";
+import { resetProgress } from "../redux/user/operations";
 
 export default function AchievementsScreen() {
+  const dispatch = useAppDispatch();
   const { colors } = useTheme();
   const { user } = useAppSelector((state) => state.auth);
   const {
@@ -28,6 +29,7 @@ export default function AchievementsScreen() {
     userProgress,
   } = useAchievements();
   const [showResetModal, setShowResetModal] = useState(false);
+
   const handleShareProgress = async () => {
     if (!userProgress || !user) return;
 
@@ -53,11 +55,13 @@ export default function AchievementsScreen() {
     }
   };
 
-  const handleResetProgress = () => {
-    //  логіка скидання прогресу
-    showToast.success({
-      message: "Функція скидання буде доступна в майбутніх версіях",
-    });
+  const handleResetProgress = async () => {
+    try {
+      await dispatch(resetProgress()).unwrap();
+      setShowResetModal(false);
+    } catch (error) {
+      console.error("Reset error:", error);
+    }
   };
 
   return (
