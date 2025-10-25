@@ -1,5 +1,6 @@
 import { ErrorScreen } from "@/components/ErrorScreen";
 import { Loader } from "@/components/Loader";
+import { useStudyTimeTracker } from "@/hooks/useStudyTimeTracker";
 import { selectIsError, selectIsLoading } from "@/redux/auth/selectors";
 import { clearError } from "@/redux/auth/slice";
 import { useFonts } from "expo-font";
@@ -13,6 +14,7 @@ import { AppProvider } from "../provider/Provider";
 import { checkAuthStatus } from "../redux/auth/operations";
 import { loadSettings } from "../redux/settings/operations";
 import { useAppDispatch, useAppSelector } from "../redux/store";
+import { useStreakChecker } from "@/hooks/useStreakChecker";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,6 +24,8 @@ function RootLayoutContent() {
   const isLoading = useAppSelector(selectIsLoading);
   const isError = useAppSelector(selectIsError);
   const [fontsLoaded] = useFonts({});
+  useStudyTimeTracker();
+  useStreakChecker();
 
   useEffect(() => {
     const initializeApp = async () => {

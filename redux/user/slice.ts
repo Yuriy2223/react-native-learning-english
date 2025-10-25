@@ -2,7 +2,13 @@ import { User, UserProgress } from "@/types/user.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { loginUser, registerUser } from "../auth/operations";
 import { setUser } from "../auth/slice";
-import { fetchUserProgress, updateProfile, updateProgress } from "./operations";
+import {
+  checkAndUpdateStreak,
+  fetchUserProgress,
+  updateProfile,
+  updateProgress,
+  updateStudyTime,
+} from "./operations";
 
 interface UserState {
   user?: User;
@@ -142,6 +148,24 @@ const userSlice = createSlice({
       .addCase(setUser, (state) => {
         state.progress = undefined;
         state.isError = undefined;
+      });
+
+    builder.addCase(updateStudyTime.fulfilled, (state, action) => {
+      if (state.user) {
+        state.user.totalStudySeconds = action.payload;
+      }
+    });
+    builder
+      .addCase(checkAndUpdateStreak.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(checkAndUpdateStreak.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.progress = action.payload;
+      })
+      .addCase(checkAndUpdateStreak.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload;
       });
   },
 });

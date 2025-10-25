@@ -1,10 +1,10 @@
+import { Exercise } from "@/types/exercises.types";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Animated } from "react-native";
-import { showToast } from "../hooks/showToast";
 import { useAppDispatch } from "../redux/store";
 import { addPoints } from "../redux/user/slice";
-import { Exercise } from "../types";
+import { showToast } from "./showToast";
 
 export function useExerciseLogic(exercises: Exercise[]) {
   const dispatch = useAppDispatch();
@@ -15,7 +15,6 @@ export function useExerciseLogic(exercises: Exercise[]) {
   const [totalScore, setTotalScore] = useState(0);
   const [completedExercises, setCompletedExercises] = useState(0);
   const [fadeAnim] = useState(new Animated.Value(1));
-
   const currentExercise = exercises[currentExerciseIndex];
   const isLastExercise = currentExerciseIndex === exercises.length - 1;
 
