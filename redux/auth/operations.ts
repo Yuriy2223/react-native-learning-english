@@ -76,14 +76,15 @@ export const loginUser = createAsyncThunk<
 });
 
 export const registerUser = createAsyncThunk<
-  { message: string; requiresVerification: boolean },
+  { message: string; requiresVerification: boolean; email: string },
   SignupFormData,
   { rejectValue: string }
 >("auth/registerUser", async (data, { rejectWithValue }) => {
   try {
+    const { confirmPassword, ...registrationData } = data;
     const response = await apiService.request<SignupResponse>("/auth/signup", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(registrationData),
     });
 
     showToast.info({
@@ -94,6 +95,7 @@ export const registerUser = createAsyncThunk<
     return {
       message: response.message,
       requiresVerification: true,
+      email: data.email,
     };
   } catch (error: unknown) {
     if (error instanceof Error) {
