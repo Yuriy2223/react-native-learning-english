@@ -1,5 +1,3 @@
-import { showToast } from "../../hooks/showToast";
-import { apiService, STORAGE_KEYS } from "../../services/api";
 import {
   GoogleAuthResponse,
   SigninFormData,
@@ -10,6 +8,8 @@ import {
 import { User } from "@/types/user.types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { showToast } from "../../hooks/showToast";
+import { apiService, STORAGE_KEYS } from "../../services/api";
 
 async function saveAuthData(
   response: SigninResponse | GoogleAuthResponse
