@@ -18,14 +18,19 @@ class GoogleAuthService {
     GoogleSignin.configure({
       webClientId,
       offlineAccess: true,
+      //// якщо надумаю вибирати
+      // forceCodeForRefreshToken: true,
     });
   }
 
   async signIn(): Promise<string> {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
 
+      //// якщо надумаю вибирати
+      // await GoogleSignin.signOut();
+
+      const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
 
       if (!idToken) {
