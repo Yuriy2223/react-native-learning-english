@@ -19,7 +19,7 @@ class GoogleAuthService {
       webClientId,
       offlineAccess: true,
       //// якщо надумаю вибирати
-      // forceCodeForRefreshToken: true,
+      forceCodeForRefreshToken: true,
     });
   }
 
@@ -28,7 +28,7 @@ class GoogleAuthService {
       await GoogleSignin.hasPlayServices();
 
       //// якщо надумаю вибирати
-      // await GoogleSignin.signOut();
+      await GoogleSignin.signOut();
 
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
