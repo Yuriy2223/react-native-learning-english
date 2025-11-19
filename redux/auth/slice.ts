@@ -1,5 +1,4 @@
-import { User } from "@/types/user.types";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import {
   checkAuthStatus,
   forgotPassword,
@@ -11,7 +10,6 @@ import {
 } from "./operations";
 
 export interface AuthState {
-  user?: User;
   isAuthenticated: boolean;
   isLoading: boolean;
   isError?: string;
@@ -31,17 +29,6 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.isError = undefined;
     },
-    updateUser: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
-    },
-    setUser: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
-      state.isAuthenticated = true;
-      state.isLoading = false;
-      state.isError = undefined;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -52,13 +39,11 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
         state.isError = undefined;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = undefined;
 
         if (typeof action.payload === "string") {
           state.isError = action.payload;
@@ -84,7 +69,6 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = undefined;
         state.isError = action.payload;
       });
 
@@ -97,18 +81,15 @@ const authSlice = createSlice({
 
         if (action.payload) {
           state.isAuthenticated = true;
-          state.user = action.payload;
           state.isError = undefined;
         } else {
           state.isAuthenticated = false;
-          state.user = undefined;
           state.isError = undefined;
         }
       })
       .addCase(checkAuthStatus.rejected, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = undefined;
         state.isError = undefined;
       });
 
@@ -147,7 +128,6 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = undefined;
         state.isError = undefined;
       })
       .addCase(logoutUser.rejected, (state, action) => {
@@ -163,17 +143,15 @@ const authSlice = createSlice({
       .addCase(googleLogin.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
         state.isError = undefined;
       })
       .addCase(googleLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = undefined;
         state.isError = action.payload;
       });
   },
 });
 
-export const { clearError, updateUser, setUser } = authSlice.actions;
+export const { clearError } = authSlice.actions;
 export const authReducer = authSlice.reducer;

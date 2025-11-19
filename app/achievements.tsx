@@ -1,3 +1,4 @@
+import { selectUser } from "@/redux/user/selectors";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
@@ -21,7 +22,7 @@ import { resetProgress } from "../redux/user/operations";
 export default function AchievementsScreen() {
   const dispatch = useAppDispatch();
   const { colors } = useTheme();
-  const { user } = useAppSelector((state) => state.auth);
+  const user = useAppSelector(selectUser);
   const {
     achievements,
     unlockedAchievements,

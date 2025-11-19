@@ -1,10 +1,16 @@
 import { User, UserProgress } from "@/types/user.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { loginUser, registerUser } from "../auth/operations";
-import { setUser } from "../auth/slice";
+import {
+  checkAuthStatus,
+  googleLogin,
+  loginUser,
+  logoutUser,
+  registerUser,
+} from "../auth/operations";
 import {
   checkAndUpdateStreak,
   fetchUserProgress,
+  refreshUserStats,
   updateProfile,
   updateProgress,
   updateStudyTime,
@@ -14,6 +20,7 @@ interface UserState {
   user?: User;
   progress?: UserProgress;
   isLoading: boolean;
+  isProgressLoading: boolean;
   isError?: string;
   studySession: {
     startTime?: number;
@@ -23,8 +30,10 @@ interface UserState {
 }
 
 const initialState: UserState = {
+  user: undefined,
   progress: undefined,
   isLoading: false,
+  isProgressLoading: false,
   isError: undefined,
   studySession: {
     startTime: undefined,
@@ -86,23 +95,39 @@ const userSlice = createSlice({
       }
     },
 
+    updateUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
+
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
+
     clearError: (state) => {
+      state.isError = undefined;
+    },
+
+    clearUser: (state) => {
+      state.user = undefined;
+      state.progress = undefined;
       state.isError = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserProgress.pending, (state) => {
-        state.isLoading = true;
+        state.isProgressLoading = true;
         state.isError = undefined;
       })
       .addCase(fetchUserProgress.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.isProgressLoading = false;
         state.progress = action.payload;
         state.isError = undefined;
       })
       .addCase(fetchUserProgress.rejected, (state, action) => {
-        state.isLoading = false;
+        state.isProgressLoading = false;
         state.isError = action.payload;
       });
 
@@ -136,25 +161,16 @@ const userSlice = createSlice({
         state.isError = action.payload;
       });
 
-    builder
-      .addCase(loginUser.fulfilled, (state) => {
-        state.progress = undefined;
-        state.isError = undefined;
-      })
-      .addCase(registerUser.fulfilled, (state) => {
-        state.progress = undefined;
-        state.isError = undefined;
-      })
-      .addCase(setUser, (state) => {
-        state.progress = undefined;
-        state.isError = undefined;
-      });
-
     builder.addCase(updateStudyTime.fulfilled, (state, action) => {
       if (state.user) {
         state.user.totalStudySeconds = action.payload;
       }
     });
+
+    builder.addCase(refreshUserStats.fulfilled, (state, action) => {
+      state.user = action.payload;
+    });
+
     builder
       .addCase(checkAndUpdateStreak.pending, (state) => {
         state.isLoading = true;
@@ -167,6 +183,35 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.isError = action.payload;
       });
+
+    builder
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.progress = undefined;
+        state.isError = undefined;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.progress = undefined;
+        state.isError = undefined;
+      })
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.user = action.payload;
+        } else {
+          state.user = undefined;
+          state.progress = undefined;
+        }
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = undefined;
+        state.progress = undefined;
+        state.isError = undefined;
+      })
+      .addCase(registerUser.fulfilled, (state) => {
+        state.progress = undefined;
+        state.isError = undefined;
+      });
   },
 });
 
@@ -178,7 +223,10 @@ export const {
   incrementKnownPhrases,
   updateStreak,
   addPoints,
+  updateUser,
+  setUser,
   clearError,
+  clearUser,
 } = userSlice.actions;
 
 export const userReducer = userSlice.reducer;
