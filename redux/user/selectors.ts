@@ -1,5 +1,7 @@
 import { RootState } from "../store";
 
+export const selectUser = (state: RootState) => state.user.user;
+
 export const selectUserProgress = (state: RootState) => state.user.progress;
 
 export const selectKnownWords = (state: RootState) =>
@@ -15,6 +17,9 @@ export const selectTotalPoints = (state: RootState) =>
   state.user.progress?.totalPoints ?? 0;
 
 export const selectUserIsLoading = (state: RootState) => state.user.isLoading;
+
+export const selectUserProgressLoading = (state: RootState) =>
+  state.user.isProgressLoading;
 
 export const selectUserError = (state: RootState) => state.user.isError;
 

@@ -24,6 +24,7 @@ import {
   toggleSound,
 } from "../../redux/settings/slice";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { selectUser } from "@/redux/user/selectors";
 
 export default function SettingsScreen() {
   const [showResetModal, setShowResetModal] = useState(false);
@@ -32,7 +33,7 @@ export default function SettingsScreen() {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.settings.settings);
   const isLoading = useAppSelector((state) => state.settings.isLoading);
-  const user = useAppSelector((state) => state.auth.user);
+  const user = useAppSelector(selectUser);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   const handleThemeToggle = async () => {

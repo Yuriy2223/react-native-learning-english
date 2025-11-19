@@ -151,3 +151,11 @@ export const resetProgress = createAsyncThunk<
     return rejectWithValue("Помилка скидання прогресу");
   }
 });
+
+export const refreshUserStats = createAsyncThunk<User, void>(
+  "auth/refreshUserStats",
+  async () => {
+    const userData = await apiService.request<User>("/users/me");
+    return userData;
+  }
+);

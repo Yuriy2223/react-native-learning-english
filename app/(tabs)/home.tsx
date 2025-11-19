@@ -1,9 +1,14 @@
 import { Spinner } from "@/components/Spinner";
-import { selectIsLoading, selectUser } from "@/redux/auth/selectors";
-import { useAppSelector } from "@/redux/store";
-import { selectStreak } from "@/redux/user/selectors";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { fetchUserProgress, refreshUserStats } from "@/redux/user/operations";
+import {
+  selectStreak,
+  selectUser,
+  selectUserIsLoading,
+} from "@/redux/user/selectors";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../components/Button";
 import { SIZES } from "../../constants";
@@ -12,9 +17,17 @@ import { formatStudyTime } from "../../utils/formatTime";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+  const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
-  const isLoading = useAppSelector(selectIsLoading);
+  const isLoading = useAppSelector(selectUserIsLoading);
   const streak = useAppSelector(selectStreak);
+
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchUserProgress());
+      dispatch(refreshUserStats());
+    }, [dispatch])
+  );
 
   const handleGetStarted = () => {
     router.push("/explore");

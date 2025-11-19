@@ -1,3 +1,4 @@
+import { selectUser } from "@/redux/user/selectors";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
@@ -21,7 +22,8 @@ import { navigate } from "../../utils";
 export default function MenuScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  // const { user } = useAppSelector((state) => state.auth);
+  const user = useAppSelector(selectUser);
 
   const handleThemeToggle = async () => {
     try {
