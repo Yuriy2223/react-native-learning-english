@@ -76,7 +76,7 @@ export default function VocabularyCardScreen() {
         dispatch(updateTopicProgress({ topicId, increment: 1 }));
 
         showToast.success({
-          message: "Слово додано до вивчених! +10 балів",
+          message: "Слово додано до вивчених!",
         });
       } else {
         showToast.success({
